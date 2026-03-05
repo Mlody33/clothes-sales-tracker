@@ -42,7 +42,7 @@ function groupEntriesByMonth(entries: ClothesEntry[]): Record<string, ClothesEnt
   return map;
 }
 
-const svgProps = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' as const };
+const svgProps = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none' as const, stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 function StatIconSpent() {
   return (<svg {...svgProps} aria-hidden><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a2 2 0 0 0 2-2V9"/></svg>);
 }
@@ -62,7 +62,7 @@ function StatIconBilans() {
   return (<svg {...svgProps} aria-hidden><line x1="12" x2="12" y1="3" y2="21"/><path d="m8 7 4-4 4 4"/><path d="M16 17l-4 4-4-4"/><line x1="18" x2="6" y1="12" y2="12"/></svg>);
 }
 
-const detailIconProps = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' as const };
+const detailIconProps = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none' as const, stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 function DetailIconCalendar() {
   return (<svg {...detailIconProps} aria-hidden><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>);
 }
