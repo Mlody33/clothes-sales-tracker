@@ -1,0 +1,12 @@
+# Data is stored in ./data on your machine (bind mount).
+# Create the folder or let Docker create it on first run.
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PORT=3001
+    restart: unless-stopped

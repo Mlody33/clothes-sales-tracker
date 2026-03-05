@@ -1,0 +1,8 @@
+/* Minimal base - full styles in App.css */
+:root {
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100dvh;
+}

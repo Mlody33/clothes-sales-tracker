@@ -1,0 +1,896 @@
+/* Mobile-first clothes sales tracker */
+
+:root {
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --text: #2c2a26;
+  --text-muted: #6b6560;
+  --accent: #c4a77d;
+  --accent-dark: #a68b5c;
+  --success: #4a7c59;
+  --danger: #b85450;
+  --spent: #8b7355;
+  --sold: #4a7c59;
+  --profit: #4a7c59;
+  --loss: #b85450;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(44, 42, 38, 0.08);
+  --safe-bottom: env(safe-area-inset-bottom, 0);
+  --fab-size: 72px;
+  --fab-margin: 20px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(var(--fab-size) + var(--fab-margin) + var(--safe-bottom));
+}
+
+.main {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* When add form is shown: size main's content to the form only so there is no extra scroll */
+.main.main-add-open {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.main.main-add-open .pages-stack {
+  flex: 0 0 auto;
+  min-height: 0;
+  align-self: stretch;
+}
+
+/* When detail or add form is shown, let page size naturally */
+.main.main-detail-open .pages-stack,
+.main.main-add-open .pages-stack {
+  min-height: 0;
+}
+.main.main-detail-open .page,
+.main.main-add-open .page {
+  min-height: 0;
+}
+
+/* When on list view, ensure add page (if still exiting) never blocks list item clicks */
+.main:not(.main-add-open) .pages-stack > .page[data-view="add"] {
+  pointer-events: none;
+}
+
+/* When list view (no detail open), let page and stack shrink to content so filtered list doesn't leave empty scroll space */
+.main.main-list-view .pages-stack {
+  min-height: 0;
+}
+.main.main-list-view .page {
+  min-height: 0;
+}
+
+/* Stack tab panels in same grid cell so they overlap during transition (no vertical gap) */
+.pages-stack {
+  display: grid;
+  min-height: 100%;
+  width: 100%;
+}
+.pages-stack > * {
+  grid-area: 1 / 1;
+  min-height: min-content;
+  width: 100%;
+  min-width: 0;
+}
+
+.page {
+  min-height: 100%;
+  width: 100%;
+  max-width: 480px;
+  padding: 16px 16px 24px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Typography */
+.screen-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+}
+
+/* Add form */
+.add-form .form .back-to-list-button {
+  margin-top: 20px;
+}
+
+.add-form .form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.label span em {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e5e1dc;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(196, 167, 125, 0.2);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.month-year-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.month-year-inputs .month-year-select {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  height: 48px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6560' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.month-year-inputs .month-year-select:first-child {
+  flex: 1.2;
+}
+
+.input.small {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  max-width: 100px;
+}
+
+/* Buttons */
+.btn {
+  padding: 18px 24px;
+  border: none;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.2s;
+  font-family: inherit;
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  margin-top: 8px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+.btn.small {
+  padding: 12px 14px;
+  min-height: 44px;
+  font-size: 0.85rem;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btn.danger {
+  background: rgba(184, 84, 80, 0.12);
+  color: var(--danger);
+}
+
+.btn.danger:hover {
+  background: rgba(184, 84, 80, 0.2);
+}
+
+/* Messages */
+.message {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.message.error {
+  background: rgba(184, 84, 80, 0.1);
+  color: var(--danger);
+}
+
+.message.success {
+  background: rgba(74, 124, 89, 0.12);
+  color: var(--success);
+}
+
+.message.warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(196, 167, 125, 0.15);
+  color: var(--accent-dark);
+}
+
+.message.warning .message-warning-action {
+  flex-shrink: 0;
+}
+
+.message-warning-action {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--accent-dark);
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.message-warning-action:hover {
+  color: var(--accent);
+}
+
+/* List screen */
+.list-screen {
+  padding: 0;
+}
+
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 24px;
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e1dc;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+}
+
+/* List filter (year + month + today) – one row */
+.list-filter {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px 14px;
+  margin-bottom: 14px;
+  align-items: flex-end;
+}
+
+.list-filter-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.list-filter-select {
+  min-width: 0;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid rgba(44, 42, 38, 0.12);
+  border-radius: var(--radius-sm);
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6560' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+.list-filter-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.list-filter .list-filter-select {
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.list-filter-today {
+  margin-left: auto;
+  margin-top: 0; /* align with selects (override .btn-primary) */
+  flex-shrink: 0;
+  min-width: 72px;
+  min-height: 42px;
+  height: 42px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Monthly stats */
+.monthly-stats {
+  margin-bottom: 16px;
+}
+
+.monthly-stats h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--text-muted);
+}
+
+.stats-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+
+.stat-month {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(44, 42, 38, 0.1);
+  color: var(--text);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-label svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+  color: var(--text-muted);
+}
+
+.stat-row.profit-row .stat-label svg,
+.stat-row.bilans-row .stat-label svg {
+  color: var(--accent);
+  opacity: 0.9;
+}
+
+.stat-row + .stat-row {
+  margin-top: 4px;
+}
+
+.stat-row.profit-row {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(44, 42, 38, 0.08);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stat-row.bilans-row {
+  margin-top: 4px;
+  padding-top: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stat-value.spent {
+  color: var(--spent);
+}
+
+.stat-value.sold {
+  color: var(--sold);
+}
+
+.stat-value.profit {
+  color: var(--profit);
+}
+
+.stat-value.loss {
+  color: var(--loss);
+}
+
+/* Entries by month */
+.entries-by-month {
+  margin-top: 4px;
+}
+
+.month-block {
+  margin-bottom: 20px;
+}
+
+.month-block:first-child {
+  margin-top: 0;
+}
+
+.month-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+}
+
+.entry-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Minimal card: light border, optional left accent */
+.entry-item {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid rgba(44, 42, 38, 0.06);
+  border-left: 3px solid transparent;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(44, 42, 38, 0.04);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.entry-item:active {
+  box-shadow: 0 1px 2px rgba(44, 42, 38, 0.06);
+}
+
+.entry-item--unsold {
+  background: rgba(250, 248, 245, 0.9);
+  border-left-color: rgba(184, 84, 80, 0.35);
+}
+
+.entry-item:not(.entry-item--unsold) {
+  border-left-color: rgba(74, 124, 89, 0.4);
+}
+
+.entry-unsold-badge {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.entry-revenue {
+  font-weight: 600;
+  color: var(--profit);
+}
+
+.entry-revenue .entry-price-icon {
+  color: inherit;
+  opacity: 1;
+}
+
+.entry-revenue.entry-revenue--loss {
+  color: var(--loss);
+}
+
+.entry-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.entry-price {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.entry-price-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.entry-price-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.entry-price-icon svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.entry-meta-sep {
+  margin: 0 4px;
+  color: rgba(44, 42, 38, 0.25);
+  font-weight: 400;
+}
+
+.entry-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Clickable list item */
+.entry-item-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.entry-item-button .entry-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-item-chevron {
+  font-size: 1rem;
+  color: rgba(44, 42, 38, 0.2);
+  flex-shrink: 0;
+  font-weight: 300;
+}
+
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Entry detail screen (after tapping an item) */
+.entry-detail-actions .back-to-list-button {
+  margin-top: 20px;
+}
+
+/* Detail view: no card */
+.entry-detail-content {
+  /* no card – matches add-form look */
+}
+
+/* View-only single item: clean display, no form fields */
+.entry-detail-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.entry-detail-heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.entry-detail-divider {
+  margin: 0;
+  border: none;
+  height: 1px;
+  background: rgba(44, 42, 38, 0.1);
+}
+
+.entry-detail-info {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.entry-detail-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.entry-detail-info-row dt {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.entry-detail-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.entry-detail-label svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+  color: var(--text-muted);
+}
+
+.entry-detail-info-row dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.entry-detail-info-row dd.positive,
+.entry-detail-revenue .positive {
+  color: var(--profit);
+}
+
+.entry-detail-info-row dd.negative,
+.entry-detail-revenue .negative {
+  color: var(--loss);
+}
+
+.entry-detail-revenue {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.entry-detail-revenue .entry-detail-label svg {
+  color: var(--accent);
+}
+
+.entry-detail-dates {
+  margin-top: 0;
+}
+
+.entry-detail-dates .entry-detail-info-row dd {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.entry-detail-date {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Edit/sell forms inside detail (keep form layout) */
+.entry-detail-content .entry-edit-form.vertical,
+.entry-detail-content .sell-edit.vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-value {
+  padding: 14px 16px;
+  border: 1px solid #e5e1dc;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.entry-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.entry-detail-actions .btn {
+  width: 100%;
+}
+
+.entry-edit-form.vertical,
+.sell-edit.vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.entry-edit-form.vertical .input,
+.sell-edit.vertical .input {
+  width: 100%;
+}
+
+.sell-edit,
+.entry-edit-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.entry-edit-form .input.small {
+  min-width: 80px;
+}
+.entry-edit-form input[type="text"] {
+  flex: 1;
+  min-width: 120px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 24px 16px;
+  margin: 0;
+}
+
+/* Delete confirmation overlay */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 42, 38, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 200;
+}
+
+.confirm-dialog {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(44, 42, 38, 0.2);
+  max-width: 320px;
+  width: 100%;
+}
+
+.confirm-message {
+  margin: 0 0 20px;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Floating action button (add) */
+.fab {
+  position: fixed;
+  bottom: calc(var(--fab-margin) + var(--safe-bottom));
+  right: var(--fab-margin);
+  width: var(--fab-size);
+  height: var(--fab-size);
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  box-shadow: 0 4px 16px rgba(196, 167, 125, 0.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fab:hover {
+  background: var(--accent-dark);
+}
+
+.fab:active {
+  box-shadow: 0 2px 10px rgba(196, 167, 125, 0.4);
+}
+
+.fab-icon {
+  font-size: 2.25rem;
+  line-height: 1;
+  font-weight: 300;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+    border-top-color: var(--accent);
+  }
+}
