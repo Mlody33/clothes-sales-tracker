@@ -7,9 +7,9 @@
   --text-muted: #6b6560;
   --accent: #c4a77d;
   --accent-dark: #a68b5c;
-  /* Primary button yellow – alternatives: #d4a017 (amber) | #e8b800 (sunny) | #c9a227 (honey) | #f0c000 (lemon) */
-  --primary-btn: #f0c000;
-  --primary-btn-hover: #d4a800;
+  /* Primary button – warm amber (matches orange/yellow background) */
+  --primary-btn: #e0a020;
+  --primary-btn-hover: #c48818;
   --success: #4a7c59;
   --danger: #c53030;
   --spent: #8b7355;
@@ -251,7 +251,7 @@ body {
 /* Buttons */
 .btn {
   padding: 18px 24px;
-  border: none;
+  border: 1px solid rgba(44, 42, 38, 0.12);
   min-height: 48px;
   display: inline-flex;
   align-items: center;
@@ -262,6 +262,15 @@ body {
   cursor: pointer;
   transition: transform 0.15s, background 0.2s;
   font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.btn .btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-right: 8px;
 }
 
 .btn:disabled {
@@ -270,16 +279,16 @@ body {
 }
 
 .btn-primary {
-  background: var(--primary-btn);
+  background: rgba(224, 160, 32, 0.88);
   color: #1a1a1a;
   margin-top: 8px;
   border: none;
-  box-shadow: 0 2px 8px rgba(240, 192, 0, 0.35);
+  box-shadow: 0 2px 8px rgba(224, 160, 32, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-btn-hover);
-  box-shadow: 0 3px 12px rgba(212, 168, 0, 0.4);
+  background: rgba(196, 136, 24, 0.92);
+  box-shadow: 0 3px 12px rgba(196, 136, 24, 0.35);
 }
 
 .btn.small {
@@ -294,12 +303,14 @@ body {
 }
 
 .btn.danger {
-  background: rgba(197, 48, 48, 0.35);
+  background: var(--surface);
   color: var(--danger);
+  border-color: rgba(197, 48, 48, 0.35);
 }
 
 .btn.danger:hover {
-  background: rgba(197, 48, 48, 0.5);
+  background: rgba(197, 48, 48, 0.08);
+  border-color: rgba(197, 48, 48, 0.5);
 }
 
 /* Messages */
@@ -572,7 +583,6 @@ body {
   background: var(--surface);
   border-radius: var(--radius);
   border: 1px solid rgba(44, 42, 38, 0.06);
-  border-left: 3px solid transparent;
   padding: 18px 20px;
   box-shadow: 0 1px 3px rgba(44, 42, 38, 0.04);
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -584,18 +594,16 @@ body {
 
 .entry-item--unsold {
   background: rgba(250, 248, 245, 0.9);
-  border-left-color: rgba(184, 84, 80, 0.35);
-}
-
-.entry-item:not(.entry-item--unsold) {
-  border-left-color: rgba(74, 124, 89, 0.4);
 }
 
 .entry-unsold-badge {
-  color: var(--text-muted);
-  font-style: italic;
-  font-size: 0.8em;
-  font-weight: 500;
+  display: inline-block;
+  background: rgba(197, 48, 48, 0.18);
+  color: var(--danger);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
 }
 
 .entry-revenue {
@@ -931,9 +939,9 @@ body {
   height: var(--fab-size);
   border-radius: 50%;
   border: none;
-  background: var(--primary-btn);
+  background: rgba(224, 160, 32, 0.88);
   color: #1a1a1a;
-  box-shadow: 0 4px 16px rgba(240, 192, 0, 0.45);
+  box-shadow: 0 4px 16px rgba(224, 160, 32, 0.4);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -944,12 +952,12 @@ body {
 }
 
 .fab:hover {
-  background: var(--primary-btn-hover);
-  box-shadow: 0 6px 20px rgba(212, 168, 0, 0.5);
+  background: rgba(196, 136, 24, 0.92);
+  box-shadow: 0 6px 20px rgba(196, 136, 24, 0.45);
 }
 
 .fab:active {
-  box-shadow: 0 2px 10px rgba(240, 192, 0, 0.4);
+  box-shadow: 0 2px 10px rgba(224, 160, 32, 0.35);
 }
 
 .fab-icon {
