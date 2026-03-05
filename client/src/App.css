@@ -920,6 +920,8 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  padding-top: max(20px, env(safe-area-inset-top));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
   z-index: 200;
 }
 
@@ -941,9 +943,13 @@ body {
 
 .confirm-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
-  justify-content: flex-end;
+}
+
+.confirm-actions .btn {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* Floating action button (add) */
