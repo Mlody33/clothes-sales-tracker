@@ -13,6 +13,8 @@ export default function App() {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [addFormBoughtMonth, setAddFormBoughtMonth] = useState(now.getMonth() + 1);
   const [addFormBoughtYear, setAddFormBoughtYear] = useState(now.getFullYear());
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+  const [filterMonth, setFilterMonth] = useState<number | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const listScrollTopRef = useRef(0);
   const shouldRestoreScrollRef = useRef(false);
@@ -126,6 +128,10 @@ export default function App() {
                 <EntryList
                   selectedEntryId={selectedEntryId}
                   onSelectedEntryIdChange={handleSelectedEntryIdChange}
+                  filterYear={filterYear}
+                  filterMonth={filterMonth}
+                  onFilterYearChange={setFilterYear}
+                  onFilterMonthChange={setFilterMonth}
                 />
               </motion.div>
             )}

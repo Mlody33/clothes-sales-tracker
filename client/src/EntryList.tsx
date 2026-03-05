@@ -70,9 +70,20 @@ function DetailIconCalendar() {
 interface EntryListProps {
   selectedEntryId: string | null;
   onSelectedEntryIdChange: (id: string | null) => void;
+  filterYear: number;
+  filterMonth: number | null;
+  onFilterYearChange: (year: number) => void;
+  onFilterMonthChange: (month: number | null) => void;
 }
 
-export function EntryList({ selectedEntryId, onSelectedEntryIdChange }: EntryListProps) {
+export function EntryList({
+  selectedEntryId,
+  onSelectedEntryIdChange,
+  filterYear,
+  filterMonth,
+  onFilterYearChange,
+  onFilterMonthChange,
+}: EntryListProps) {
   const [entries, setEntries] = useState<ClothesEntry[]>([]);
   const [stats, setStats] = useState<MonthlyStat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,8 +97,6 @@ export function EntryList({ selectedEntryId, onSelectedEntryIdChange }: EntryLis
   const [editBoughtYear, setEditBoughtYear] = useState(new Date().getFullYear());
   const [editSellPrice, setEditSellPrice] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [filterYear, setFilterYear] = useState<number>(() => new Date().getFullYear());
-  const [filterMonth, setFilterMonth] = useState<number | null>(null);
 
   async function load() {
     setLoading(true);
@@ -110,8 +119,10 @@ export function EntryList({ selectedEntryId, onSelectedEntryIdChange }: EntryLis
   useEffect(() => {
     if (stats.length === 0) return;
     const years = [...new Set(stats.map((s) => s.month.split('-')[0]))].map(Number).sort((a, b) => b - a);
-    setFilterYear((prev) => (years.includes(prev) ? prev : years[0]));
-  }, [stats]);
+    if (years.length > 0 && !years.includes(filterYear)) {
+      onFilterYearChange(years[0]);
+    }
+  }, [stats, filterYear, onFilterYearChange]);
 
   async function handleDelete(id: string) {
     try {
@@ -536,49 +547,74 @@ export function EntryList({ selectedEntryId, onSelectedEntryIdChange }: EntryLis
       <h2 className="screen-title">Wszystkie ubrania</h2>
 
       {/* Year + month filter */}
-      <div className="list-filter">
-        <label className="list-filter-label">
-          <span>Rok</span>
-          <select
-            className="list-filter-select"
-            value={effectiveYear}
-            onChange={(e) => {
-              setFilterYear(Number(e.target.value));
-            }}
-          >
-            {availableYears.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </label>
-        <label className="list-filter-label">
-          <span>Miesiąc</span>
-          <select
-            className="list-filter-select"
-            value={effectiveMonth ?? ''}
-            onChange={(e) => {
-              const v = e.target.value;
-              setFilterMonth(v === '' ? null : Number(v));
-            }}
-          >
-            <option value="">Cały rok</option>
-            {availableMonthsForYear.map((monthNum) => (
-              <option key={monthNum} value={monthNum}>{MONTH_NAMES[monthNum - 1]}</option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="button"
-          className="btn btn-primary list-filter-today"
-          onClick={() => {
-            const now = new Date();
-            setFilterYear(now.getFullYear());
-            setFilterMonth(now.getMonth() + 1);
-          }}
-        >
-          Dziś
-        </button>
-      </div>
+      {(() => {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const isTodaySelected = filterYear === currentYear && filterMonth === currentMonth;
+        return (
+          <div className="list-filter">
+            <label className="list-filter-label">
+              <span>Rok</span>
+              <select
+                className="list-filter-select"
+                value={effectiveYear}
+                onChange={(e) => {
+                  onFilterYearChange(Number(e.target.value));
+                }}
+              >
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </label>
+            <label className="list-filter-label">
+              <span>Miesiąc</span>
+              <select
+                className="list-filter-select"
+                value={effectiveMonth ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  onFilterMonthChange(v === '' ? null : Number(v));
+                }}
+              >
+                <option value="">Cały rok</option>
+                {availableMonthsForYear.map((monthNum) => (
+                  <option key={monthNum} value={monthNum}>{MONTH_NAMES[monthNum - 1]}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="btn btn-primary list-filter-today"
+              onClick={() => {
+                if (isTodaySelected) {
+                  onFilterYearChange(currentYear);
+                  onFilterMonthChange(null);
+                } else {
+                  onFilterYearChange(currentYear);
+                  onFilterMonthChange(currentMonth);
+                }
+              }}
+            >
+              <span className="list-filter-today-label">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={isTodaySelected ? 'rok' : 'dzis'}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    style={{ display: 'inline-block' }}
+                  >
+                    {isTodaySelected ? 'Rok' : 'Dziś'}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Stats: one card for selected month or aggregated for whole year */}
       {stats.length > 0 && (() => {

@@ -372,6 +372,13 @@ body {
   box-sizing: border-box;
 }
 
+.list-filter-today-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3ch; /* keep width stable when switching Dziś ↔ Rok */
+}
+
 /* Monthly stats */
 .monthly-stats {
   margin-bottom: 16px;
