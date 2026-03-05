@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchEntries, fetchMonthlyStats, deleteEntry, updateEntrySellPrice, updateEntry } from './api';
 import type { ClothesEntry, MonthlyStat } from './types';
@@ -584,26 +584,30 @@ export function EntryList({ selectedEntryId, onSelectedEntryIdChange }: EntryLis
       {stats.length > 0 && (() => {
         const soldCount = filteredEntries.filter((e) => e.sellPrice != null).length;
         const unsoldCount = filteredEntries.filter((e) => e.sellPrice == null).length;
+        const statsKey = `${effectiveYear}-${effectiveMonth ?? 'all'}`;
+        let statsContent: ReactNode = null;
         if (effectiveMonth != null) {
           const monthKey = `${effectiveYear}-${String(effectiveMonth).padStart(2, '0')}`;
           const s = stats.find((x) => x.month === monthKey);
-          if (!s) return null;
-          const bilans = s.soldTotal - s.boughtTotal;
-          return (
-            <motion.section
-              className="monthly-stats"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <h3>Statystyki</h3>
-              <div className="stats-cards">
-                <motion.div
-                  className="stat-card"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 }}
-                >
+          if (s) {
+            const bilans = s.soldTotal - s.boughtTotal;
+            statsContent = (
+              <motion.section
+                key={statsKey}
+                className="monthly-stats"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <h3>Statystyki</h3>
+                <div className="stats-cards">
+                  <motion.div
+                    className="stat-card"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2, delay: 0.05 }}
+                  >
                   <div className="stat-month">{formatMonth(monthKey)}</div>
                   <div className="stat-row">
                     <span className="stat-label"><StatIconSpent /> Wydano</span>
@@ -636,34 +640,37 @@ export function EntryList({ selectedEntryId, onSelectedEntryIdChange }: EntryLis
                 </motion.div>
               </div>
             </motion.section>
-          );
-        }
-        const yearStats = stats.filter((s) => s.month.startsWith(String(effectiveYear)));
-        if (yearStats.length === 0) return null;
-        const aggregated = yearStats.reduce(
-          (acc, s) => ({
-            boughtTotal: acc.boughtTotal + s.boughtTotal,
-            soldTotal: acc.soldTotal + s.soldTotal,
-            profit: acc.profit + s.profit,
-          }),
-          { boughtTotal: 0, soldTotal: 0, profit: 0 }
-        );
-        const bilans = aggregated.soldTotal - aggregated.boughtTotal;
-        return (
-          <motion.section
-            className="monthly-stats"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <h3>Statystyki</h3>
-            <div className="stats-cards">
-              <motion.div
-                className="stat-card"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 }}
+            );
+          }
+        } else {
+          const yearStats = stats.filter((s) => s.month.startsWith(String(effectiveYear)));
+          if (yearStats.length > 0) {
+            const aggregated = yearStats.reduce(
+              (acc, s) => ({
+                boughtTotal: acc.boughtTotal + s.boughtTotal,
+                soldTotal: acc.soldTotal + s.soldTotal,
+                profit: acc.profit + s.profit,
+              }),
+              { boughtTotal: 0, soldTotal: 0, profit: 0 }
+            );
+            const bilans = aggregated.soldTotal - aggregated.boughtTotal;
+            statsContent = (
+              <motion.section
+                key={statsKey}
+                className="monthly-stats"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
+                <h3>Statystyki</h3>
+                <div className="stats-cards">
+                  <motion.div
+                    className="stat-card"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2, delay: 0.05 }}
+                  >
                 <div className="stat-month">Rok {effectiveYear}</div>
                 <div className="stat-row">
                   <span className="stat-label"><StatIconSpent /> Wydano łącznie</span>
@@ -696,7 +703,10 @@ export function EntryList({ selectedEntryId, onSelectedEntryIdChange }: EntryLis
               </motion.div>
             </div>
           </motion.section>
-        );
+            );
+          }
+        }
+        return statsContent ? <AnimatePresence mode="wait">{statsContent}</AnimatePresence> : null;
       })()}
 
       {/* List by month */}
