@@ -198,6 +198,11 @@ body {
   flex-shrink: 0;
 }
 
+/* When title is not in .screen-title-row (e.g. loading/error states), restore bottom spacing */
+.list-screen > .screen-title {
+  margin-bottom: 12px;
+}
+
 .screen-title-stats {
   flex-shrink: 0;
   min-width: 0;
