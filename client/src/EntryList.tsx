@@ -745,8 +745,17 @@ export function EntryList({
         return statsContent ? <AnimatePresence mode="wait">{statsContent}</AnimatePresence> : null;
       })()}
 
-      {/* List by month */}
+      {/* List by month – key by filter so list animates when switching e.g. Dziś ↔ Rok */}
       <section className="entries-by-month">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`list-${effectiveYear}-${effectiveMonth ?? 'all'}`}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -14 }}
+            transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+            style={{ width: '100%' }}
+          >
         {months.length === 0 ? (
           <motion.p
             className="empty-state"
@@ -761,9 +770,9 @@ export function EntryList({
             <motion.div
               key={monthKey}
               className="month-block"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.25 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, delay: 0.03 }}
               layout
             >
               <h4 className="month-heading">{formatMonth(monthKey)}</h4>
@@ -833,6 +842,8 @@ export function EntryList({
             </motion.div>
           ))
         )}
+          </motion.div>
+        </AnimatePresence>
       </section>
     </motion.div>
   );

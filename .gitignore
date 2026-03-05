@@ -1,2 +1,3 @@
 # Docker bind volume – app data (entries.json etc.)
 data/
+clothes-sales-tracker.tar

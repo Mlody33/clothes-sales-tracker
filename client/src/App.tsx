@@ -138,22 +138,23 @@ export default function App() {
           </AnimatePresence>
         </div>
       </main>
+
       <AnimatePresence>
         {tab === 'list' && (
           <motion.button
             type="button"
             className="fab"
             onClick={() => {
-            setTab('add');
-            setSelectedEntryId(null);
-          }}
-          aria-label="Dodaj pozycję"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          whileTap={{ scale: 0.92 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        >
+              setTab('add');
+              setSelectedEntryId(null);
+            }}
+            aria-label="Dodaj pozycję"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileTap={{ scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
             <span className="fab-icon" aria-hidden>＋</span>
           </motion.button>
         )}
