@@ -181,14 +181,45 @@ body {
 }
 
 /* Typography */
+.screen-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  min-height: 0;
+}
+
 .screen-title {
   font-size: 1.5rem;
   font-weight: 600;
-  margin: 0 0 12px;
+  margin: 0;
   letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.screen-title-stats {
+  flex-shrink: 0;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: right;
+  overflow: hidden;
+}
+
+.screen-title-stat {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Add form */
+.add-form .screen-title {
+  margin-bottom: 16px;
+}
+
 .add-form .form .back-to-list-button {
   margin-top: 20px;
 }

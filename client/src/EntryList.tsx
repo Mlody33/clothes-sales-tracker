@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchEntries, fetchMonthlyStats, deleteEntry, updateEntrySellPrice, updateEntry } from './api';
@@ -22,6 +22,13 @@ function formatMonthYear(iso: string): string {
 
 function getBoughtAt(e: ClothesEntry): string {
   return e.boughtAt ?? e.createdAt;
+}
+
+function isToday(iso: string | null | undefined): boolean {
+  if (!iso) return false;
+  const d = new Date(iso);
+  const today = new Date();
+  return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
 }
 
 function isoToMonthYear(iso: string): { month: number; year: number } {
@@ -98,6 +105,7 @@ export function EntryList({
   const [editBoughtYear, setEditBoughtYear] = useState(new Date().getFullYear());
   const [editSellPrice, setEditSellPrice] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [todayStatIndex, setTodayStatIndex] = useState(0);
 
   async function load() {
     setLoading(true);
@@ -124,6 +132,70 @@ export function EntryList({
       onFilterYearChange(years[0]);
     }
   }, [stats, filterYear, onFilterYearChange]);
+
+  const todayStats = useMemo(() => {
+    const safe = Array.isArray(entries) ? entries : [];
+    const addedToday = safe.filter((e) => isToday(e.createdAt)).length;
+    const soldToday = safe.filter((e) => e.soldAt && isToday(e.soldAt)).length;
+    const totalItems = safe.length;
+    const soldEntries = safe.filter((e) => e.sellPrice != null);
+    const bestRevenue =
+      soldEntries.length === 0
+        ? 0
+        : Math.max(...soldEntries.map((e) => e.sellPrice! - e.boughtPrice));
+    const worstRevenue =
+      soldEntries.length === 0
+        ? 0
+        : Math.min(...soldEntries.map((e) => e.sellPrice! - e.boughtPrice));
+    const profitByMonth: Record<string, number> = {};
+    for (const e of soldEntries) {
+      if (!e.soldAt) continue;
+      const d = new Date(e.soldAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      profitByMonth[key] = (profitByMonth[key] ?? 0) + (e.sellPrice! - e.boughtPrice);
+    }
+    const bestRevenueMonthKey =
+      Object.keys(profitByMonth).length > 0
+        ? Object.entries(profitByMonth).sort((a, b) => b[1] - a[1])[0][0]
+        : null;
+    const worstRevenueMonthKey =
+      Object.keys(profitByMonth).length > 0
+        ? Object.entries(profitByMonth).sort((a, b) => a[1] - b[1])[0][0]
+        : null;
+    const formatMonthKey = (key: string) => {
+      const [y, m] = key.split('-');
+      const date = new Date(parseInt(y, 10), parseInt(m, 10) - 1);
+      return date.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+    };
+    const bestRevenueMonthText = bestRevenueMonthKey ? formatMonthKey(bestRevenueMonthKey) : null;
+    const worstRevenueMonthText = worstRevenueMonthKey ? formatMonthKey(worstRevenueMonthKey) : null;
+    return [
+      { key: 'added', text: `${addedToday} dodanych dziś` },
+      { key: 'sold', text: `${soldToday} sprzedanych dziś` },
+      { key: 'total', text: `${totalItems} pozycji łącznie` },
+      {
+        key: 'best-revenue',
+        text: `Rekord zysku: ${bestRevenue >= 0 ? '+' : ''}${bestRevenue.toFixed(2)} zł`,
+      },
+      ...(bestRevenueMonthText
+        ? [{ key: 'best-month' as const, text: `Najlepszy miesiąc: ${bestRevenueMonthText}` }]
+        : []),
+      {
+        key: 'worst-revenue',
+        text: `Najgorszy zysk: ${worstRevenue >= 0 ? '+' : ''}${worstRevenue.toFixed(2)} zł`,
+      },
+      ...(worstRevenueMonthText
+        ? [{ key: 'worst-month' as const, text: `Najgorszy miesiąc: ${worstRevenueMonthText}` }]
+        : []),
+    ];
+  }, [entries]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTodayStatIndex((i) => (i + 1) % Math.max(1, todayStats.length));
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [todayStats.length]);
 
   async function handleDelete(id: string) {
     try {
@@ -260,7 +332,6 @@ export function EntryList({
   const byMonth = groupEntriesByMonth(filteredEntries);
   const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
   const selectedEntry = selectedEntryId ? safeEntries.find((e) => e.id === selectedEntryId) : null;
-
   /* Detail view when an entry is selected */
   if (selectedEntryId && selectedEntry) {
     const isEditingThis = editingEntryId === selectedEntry.id;
@@ -556,7 +627,26 @@ export function EntryList({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}
     >
-      <h2 className="screen-title">Wszystkie ubrania</h2>
+      <div className="screen-title-row">
+        <h2 className="screen-title">Wszystkie ubrania</h2>
+        <div className="screen-title-stats" aria-live="polite">
+          <AnimatePresence mode="wait" initial={false}>
+            {todayStats.length > 0 && (
+              <motion.span
+                key={todayStats[todayStatIndex % todayStats.length].key}
+                className="screen-title-stat"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{ display: 'block', whiteSpace: 'nowrap' }}
+              >
+                {todayStats[todayStatIndex % todayStats.length].text}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
 
       {/* Year + month filter */}
       {(() => {
