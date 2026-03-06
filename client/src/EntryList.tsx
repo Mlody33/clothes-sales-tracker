@@ -328,17 +328,15 @@ export function EntryList({
   const normalize = (s: string) =>
     s.toLowerCase().replace(/ł/g, 'l').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const searchActive = searchQuery.trim().length > 0;
-  const filteredEntries = safeEntries.filter((e) => {
-    if (searchActive) {
-      return normalize(e.name).includes(normalize(searchQuery.trim()));
-    }
+  const periodEntries = safeEntries.filter((e) => {
     const d = new Date(getBoughtAt(e));
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
-    if (y !== effectiveYear) return false;
-    if (effectiveMonth != null && m !== effectiveMonth) return false;
+    if (d.getFullYear() !== effectiveYear) return false;
+    if (effectiveMonth != null && d.getMonth() + 1 !== effectiveMonth) return false;
     return true;
   });
+  const filteredEntries = searchActive
+    ? safeEntries.filter((e) => normalize(e.name).includes(normalize(searchQuery.trim())))
+    : periodEntries;
 
   const byMonth = groupEntriesByMonth(filteredEntries);
   const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
@@ -591,6 +589,7 @@ export function EntryList({
                     className="btn back-to-list-button"
                     onClick={() => {
                       onSelectedEntryIdChange(null);
+                      setSearchQuery('');
                       cancelEditing();
                       setEditingSell(null);
                       setSellPriceInput('');
@@ -752,9 +751,10 @@ export function EntryList({
       })()}
 
       {/* Stats: one card for selected month or aggregated for whole year */}
-      {stats.length > 0 && (() => {
-        const soldCount = filteredEntries.filter((e) => e.sellPrice != null).length;
-        const unsoldCount = filteredEntries.filter((e) => e.sellPrice == null).length;
+      <AnimatePresence>
+      {!searchActive && stats.length > 0 && (() => {
+        const soldCount = periodEntries.filter((e) => e.sellPrice != null).length;
+        const unsoldCount = periodEntries.filter((e) => e.sellPrice == null).length;
         const statsKey = `${effectiveYear}-${effectiveMonth ?? 'all'}`;
         let statsContent: ReactNode = null;
         if (effectiveMonth != null) {
@@ -877,8 +877,22 @@ export function EntryList({
             );
           }
         }
-        return statsContent ? <AnimatePresence mode="wait">{statsContent}</AnimatePresence> : null;
+        return statsContent
+          ? (
+            <motion.div
+              key="stats-card"
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 0 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+              style={{ overflow: 'hidden' }}
+            >
+              <AnimatePresence mode="wait">{statsContent}</AnimatePresence>
+            </motion.div>
+          )
+          : null;
       })()}
+      </AnimatePresence>
 
       {/* Search */}
       <div className="search-box-wrap">
