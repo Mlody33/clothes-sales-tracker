@@ -55,32 +55,23 @@ app.get('/api/vinted-item', async (req, res) => {
     const html = await response.text();
     const result = {};
 
-    // 1. Try JSON-LD Product schema
-    const jsonLdMatch = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/i);
-    if (jsonLdMatch) {
-      try {
-        const ld = JSON.parse(jsonLdMatch[1]);
-        if (ld.name) result.title = ld.name;
-        if (ld.offers?.price != null) result.price = parseFloat(ld.offers.price);
-        const avail = ld.offers?.availability || '';
-        if (/SoldOut|OutOfStock/i.test(avail)) result.isSold = true;
-        const rawDate = ld.datePublished || ld.dateCreated || ld.uploadDate;
-        if (rawDate) result.date = rawDate.slice(0, 10);
-        // Extract timestamp from Vinted image URL: /f800/1769965223.webp
-        if (!result.date) {
-          const imgUrl = Array.isArray(ld.image) ? ld.image[0] : ld.image;
-          const tsMatch = imgUrl && imgUrl.match(/\/f\d+\/(\d{10})\.webp/);
-          if (tsMatch) result.date = new Date(Number(tsMatch[1]) * 1000).toISOString().slice(0, 10);
-        }
-      } catch {}
+    // 1. Parse Vinted RSC embedded JSON (Next.js flight data — keys are \"escaped\")
+    const titleMatch = html.match(/\\"title\\":\\"([^\\"]+)\\",\\"catalog_id\\"/);
+    if (titleMatch) result.title = titleMatch[1];
+
+    const closedMatch = html.match(/\\"is_closed\\":(true|false)/);
+    const actionMatch = html.match(/\\"item_closing_action\\":\\"([^\\"]*)\\"/);
+    if (closedMatch && closedMatch[1] === 'true' && actionMatch && actionMatch[1] === 'sold') {
+      result.isSold = true;
     }
 
-    // 1b. Fallback: extract timestamp from raw HTML (analytics data: "timestamp":1769965223)
-    if (!result.date) {
-      const tsMatch = html.match(/"timestamp"\\?:(\d{10})/);
-      if (tsMatch) result.date = new Date(Number(tsMatch[1]) * 1000).toISOString().slice(0, 10);
-    }
+    // 2. Extract sold price from originalAskingAmount
+    const priceMatch = html.match(/\\"originalAskingAmount\\":\{\\"amount\\":\\"([0-9.]+)\\"/);
+    if (priceMatch) result.price = parseFloat(priceMatch[1]);
 
+    // 3. Extract date from first image URL timestamp: /f800/1769965223.webp
+    const tsMatch = html.match(/\/f\d+\/(\d{10})\.webp/);
+    if (tsMatch) result.date = new Date(Number(tsMatch[1]) * 1000).toISOString().slice(0, 10);
 
     // 4. Fallbacks via meta / <title>
     if (!result.title) {

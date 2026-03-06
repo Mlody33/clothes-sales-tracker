@@ -76,6 +76,7 @@ export interface VintedItem {
   title: string;
   date?: string; // YYYY-MM-DD
   isSold?: boolean;
+  price?: number;
 }
 
 export async function fetchVintedItem(url: string): Promise<VintedItem> {
