@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { addEntry, fetchVintedItem, type VintedItem } from './api';
+import { addEntry, fetchEntries, fetchVintedItem, type VintedItem } from './api';
 
 const MONTH_NAMES = [
   'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
@@ -35,6 +35,23 @@ export function AddEntryForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [priceSuggestions, setPriceSuggestions] = useState<number[]>([]);
+
+  useEffect(() => {
+    fetchEntries().then((entries) => {
+      const freq: Record<string, number> = {};
+      for (const e of entries) {
+        const p = Number(e.boughtPrice);
+        if (p > 0) freq[p] = (freq[p] ?? 0) + 1;
+      }
+      const top = Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([p]) => Number(p))
+        .sort((a, b) => a - b);
+      setPriceSuggestions(top);
+    }).catch(() => {});
+  }, []);
 
   async function handleVintedUrl(url: string) {
     const trimmed = url.trim();
@@ -110,49 +127,6 @@ export function AddEntryForm({
         transition={{ delay: 0.1 }}
       >
         <label className="label">
-          <span>Link Vinted <em>opcjonalnie – uzupełni nazwę</em></span>
-          <div className="input-with-action">
-            <input
-              ref={vintedInputRef}
-              type="url"
-              value={vintedUrl}
-              onChange={(e) => handleVintedUrl(e.target.value)}
-              placeholder="https://www.vinted.pl/items/..."
-              autoComplete="off"
-              className="input"
-              autoFocus
-            />
-            <button
-              type="button"
-              className="input-action-btn"
-              onClick={() => {
-                const el = vintedInputRef.current;
-                if (!el) return;
-                el.focus();
-                document.execCommand('paste');
-              }}
-              aria-label="Wklej"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-            </button>
-          </div>
-          {vintedLoading && (
-            <span className="vinted-status">Pobieranie danych…</span>
-          )}
-          {vintedError && (
-            <span className="vinted-status vinted-status--error">{vintedError}</span>
-          )}
-          {vintedItem && !vintedLoading && (
-            <span className="vinted-status">
-              {[
-                vintedItem.title,
-                vintedItem.date,
-                vintedItem.isSold ? 'sprzedane' : null,
-              ].filter(Boolean).join(' · ')}
-            </span>
-          )}
-        </label>
-        <label className="label">
           <span>Nazwa ubrania</span>
           <input
             type="text"
@@ -162,6 +136,33 @@ export function AddEntryForm({
             autoComplete="off"
             className="input"
           />
+        </label>
+        <label className="label">
+          <span>Cena zakupu (zł)</span>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={boughtPrice}
+            onChange={(e) => setBoughtPrice(e.target.value)}
+            placeholder="0.00"
+            className="input"
+            inputMode="decimal"
+          />
+          {priceSuggestions.length > 0 && (
+            <div className="price-suggestions">
+              {priceSuggestions.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`price-chip${boughtPrice === String(p) ? ' price-chip--active' : ''}`}
+                  onClick={() => setBoughtPrice(String(p))}
+                >
+                  {p} zł
+                </button>
+              ))}
+            </div>
+          )}
         </label>
         <label className="label">
           <span>Miesiąc i rok zakupu</span>
@@ -211,19 +212,6 @@ export function AddEntryForm({
           )}
         </AnimatePresence>
         <label className="label">
-          <span>Cena zakupu (zł)</span>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={boughtPrice}
-            onChange={(e) => setBoughtPrice(e.target.value)}
-            placeholder="0.00"
-            className="input"
-            inputMode="decimal"
-          />
-        </label>
-        <label className="label">
           <span>Cena sprzedaży (zł) <em>opcjonalnie</em></span>
           <input
             type="number"
@@ -235,6 +223,48 @@ export function AddEntryForm({
             className="input"
             inputMode="decimal"
           />
+        </label>
+        <label className="label">
+          <span>Link Vinted <em>opcjonalnie – uzupełni nazwę</em></span>
+          <div className="input-with-action">
+            <input
+              ref={vintedInputRef}
+              type="url"
+              value={vintedUrl}
+              onChange={(e) => handleVintedUrl(e.target.value)}
+              placeholder="https://www.vinted.pl/items/..."
+              autoComplete="off"
+              className="input"
+            />
+            <button
+              type="button"
+              className="input-action-btn"
+              onClick={() => {
+                const el = vintedInputRef.current;
+                if (!el) return;
+                el.focus();
+                document.execCommand('paste');
+              }}
+              aria-label="Wklej"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            </button>
+          </div>
+          {vintedLoading && (
+            <span className="vinted-status">Pobieranie danych…</span>
+          )}
+          {vintedError && (
+            <span className="vinted-status vinted-status--error">{vintedError}</span>
+          )}
+          {vintedItem && !vintedLoading && (
+            <span className="vinted-status">
+              {[
+                vintedItem.title,
+                vintedItem.date,
+                vintedItem.isSold ? 'sprzedane' : null,
+              ].filter(Boolean).join(' · ')}
+            </span>
+          )}
         </label>
         {error && (
           <motion.p

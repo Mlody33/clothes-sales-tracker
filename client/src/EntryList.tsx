@@ -39,7 +39,7 @@ function isoToMonthYear(iso: string): { month: number; year: number } {
 function groupEntriesByMonth(entries: ClothesEntry[]): Record<string, ClothesEntry[]> {
   const map: Record<string, ClothesEntry[]> = {};
   const sorted = [...entries].sort(
-    (a, b) => new Date(getBoughtAt(b)).getTime() - new Date(getBoughtAt(a)).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
   for (const e of sorted) {
     const d = new Date(getBoughtAt(e));
@@ -107,6 +107,7 @@ export function EntryList({
   const [editVintedUrl, setEditVintedUrl] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [todayStatIndex, setTodayStatIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   async function load() {
     setLoading(true);
@@ -324,7 +325,13 @@ export function EntryList({
     ? filterMonth
     : null;
 
+  const normalize = (s: string) =>
+    s.toLowerCase().replace(/ł/g, 'l').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const searchActive = searchQuery.trim().length > 0;
   const filteredEntries = safeEntries.filter((e) => {
+    if (searchActive) {
+      return normalize(e.name).includes(normalize(searchQuery.trim()));
+    }
     const d = new Date(getBoughtAt(e));
     const y = d.getFullYear();
     const m = d.getMonth() + 1;
@@ -873,11 +880,29 @@ export function EntryList({
         return statsContent ? <AnimatePresence mode="wait">{statsContent}</AnimatePresence> : null;
       })()}
 
+      {/* Search */}
+      <div className="search-box-wrap">
+        <svg className="search-box-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input
+          type="search"
+          className="search-box-input"
+          placeholder="Szukaj po nazwie…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          autoComplete="off"
+        />
+        {searchQuery && (
+          <button type="button" className="search-box-clear" onClick={() => setSearchQuery('')} aria-label="Wyczyść">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        )}
+      </div>
+
       {/* List by month – key by filter so list animates when switching e.g. Dziś ↔ Rok */}
       <section className="entries-by-month">
         <AnimatePresence mode="wait">
           <motion.div
-            key={`list-${effectiveYear}-${effectiveMonth ?? 'all'}`}
+            key={searchActive ? `search-${searchQuery}` : `list-${effectiveYear}-${effectiveMonth ?? 'all'}`}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -14 }}
@@ -891,7 +916,7 @@ export function EntryList({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            Brak pozycji. Dodaj pierwszą z zakładki Dodaj.
+            {searchActive ? `Brak wyników dla „${searchQuery}".` : 'Brak pozycji. Dodaj pierwszą z zakładki Dodaj.'}
           </motion.p>
         ) : (
           months.map((monthKey) => (
