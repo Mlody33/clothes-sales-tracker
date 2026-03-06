@@ -6,6 +6,7 @@ export interface ClothesEntry {
   boughtAt?: string | null;
   soldAt: string | null;
   createdAt: string;
+  vintedUrl?: string | null;
 }
 
 export interface MonthlyStat {

@@ -104,6 +104,7 @@ export function EntryList({
   const [editBoughtMonth, setEditBoughtMonth] = useState(1);
   const [editBoughtYear, setEditBoughtYear] = useState(new Date().getFullYear());
   const [editSellPrice, setEditSellPrice] = useState('');
+  const [editVintedUrl, setEditVintedUrl] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [todayStatIndex, setTodayStatIndex] = useState(0);
 
@@ -233,6 +234,7 @@ export function EntryList({
     setEditBoughtMonth(month);
     setEditBoughtYear(year);
     setEditSellPrice(entry.sellPrice != null ? String(entry.sellPrice) : '');
+    setEditVintedUrl(entry.vintedUrl ?? '');
   }
 
   function cancelEditing() {
@@ -242,6 +244,7 @@ export function EntryList({
     setEditBoughtMonth(new Date().getMonth() + 1);
     setEditBoughtYear(new Date().getFullYear());
     setEditSellPrice('');
+    setEditVintedUrl('');
   }
 
   async function handleSaveEdit(id: string) {
@@ -260,6 +263,7 @@ export function EntryList({
         boughtPrice,
         boughtAt: new Date(editBoughtYear, editBoughtMonth - 1, 1, 12, 0, 0, 0).toISOString(),
         sellPrice,
+        vintedUrl: editVintedUrl.trim() || null,
       });
       setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
       cancelEditing();
@@ -415,6 +419,17 @@ export function EntryList({
                     inputMode="decimal"
                   />
                 </label>
+                <label className="label">
+                  <span>Link Vinted <em>opcjonalnie</em></span>
+                  <input
+                    type="url"
+                    value={editVintedUrl}
+                    onChange={(e) => setEditVintedUrl(e.target.value)}
+                    placeholder="https://www.vinted.pl/items/..."
+                    className="input"
+                    autoComplete="off"
+                  />
+                </label>
                 <div className="entry-detail-actions">
                   <button type="button" className="btn btn-primary" onClick={() => handleSaveEdit(selectedEntry.id)}>
                     <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
@@ -523,8 +538,18 @@ export function EntryList({
                     </div>
                   )}
                 </div>
-                <hr className="entry-detail-divider" aria-hidden />
                 <div className="entry-detail-actions">
+                  {selectedEntry.vintedUrl && (
+                    <a
+                      href={selectedEntry.vintedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="vinted-link"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+                      Otwórz na Vinted
+                    </a>
+                  )}
                   {selectedEntry.sellPrice == null && (
                     <button
                       type="button"

@@ -35,6 +35,74 @@ async function writeEntries(entries) {
   await fs.writeFile(DATA_FILE, JSON.stringify({ entries }, null, 2));
 }
 
+// GET Vinted item data (title, price, date, sold status) by URL
+app.get('/api/vinted-item', async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url || !/^https:\/\/www\.vinted\./i.test(url)) {
+      return res.status(400).json({ error: 'Podaj prawidłowy link Vinted' });
+    }
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'pl-PL,pl;q=0.9',
+      },
+    });
+    if (!response.ok) {
+      return res.status(502).json({ error: 'Nie udało się pobrać strony Vinted' });
+    }
+    const html = await response.text();
+    const result = {};
+
+    // 1. Try JSON-LD Product schema
+    const jsonLdMatch = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/i);
+    if (jsonLdMatch) {
+      try {
+        const ld = JSON.parse(jsonLdMatch[1]);
+        if (ld.name) result.title = ld.name;
+        if (ld.offers?.price != null) result.price = parseFloat(ld.offers.price);
+        const avail = ld.offers?.availability || '';
+        if (/SoldOut|OutOfStock/i.test(avail)) result.isSold = true;
+        const rawDate = ld.datePublished || ld.dateCreated || ld.uploadDate;
+        if (rawDate) result.date = rawDate.slice(0, 10);
+        // Extract timestamp from Vinted image URL: /f800/1769965223.webp
+        if (!result.date) {
+          const imgUrl = Array.isArray(ld.image) ? ld.image[0] : ld.image;
+          const tsMatch = imgUrl && imgUrl.match(/\/f\d+\/(\d{10})\.webp/);
+          if (tsMatch) result.date = new Date(Number(tsMatch[1]) * 1000).toISOString().slice(0, 10);
+        }
+      } catch {}
+    }
+
+    // 1b. Fallback: extract timestamp from raw HTML (analytics data: "timestamp":1769965223)
+    if (!result.date) {
+      const tsMatch = html.match(/"timestamp"\\?:(\d{10})/);
+      if (tsMatch) result.date = new Date(Number(tsMatch[1]) * 1000).toISOString().slice(0, 10);
+    }
+
+
+    // 4. Fallbacks via meta / <title>
+    if (!result.title) {
+      const ogMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i)
+                   || html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:title"/i);
+      if (ogMatch) result.title = ogMatch[1];
+    }
+    if (!result.title) {
+      const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+      if (titleMatch) result.title = titleMatch[1].replace(/\s*\|.*$/, '').trim();
+    }
+
+    if (!result.title) {
+      return res.status(404).json({ error: 'Nie znaleziono danych na stronie' });
+    }
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Błąd podczas pobierania danych' });
+  }
+});
+
 // GET all entries (optionally by month for stats)
 app.get('/api/entries', async (req, res) => {
   try {
@@ -96,7 +164,7 @@ app.get('/api/stats/monthly', async (req, res) => {
 // POST new entry
 app.post('/api/entries', async (req, res) => {
   try {
-    const { name, boughtPrice, sellPrice, boughtAt: boughtAtBody } = req.body;
+    const { name, boughtPrice, sellPrice, boughtAt: boughtAtBody, vintedUrl } = req.body;
     if (!name || boughtPrice == null) {
       return res.status(400).json({ error: 'Name and bought price are required' });
     }
@@ -115,6 +183,7 @@ app.post('/api/entries', async (req, res) => {
       soldAt: sellPrice != null && sellPrice !== '' ? new Date().toISOString() : null,
       boughtAt,
       createdAt,
+      vintedUrl: vintedUrl ? String(vintedUrl).trim() : null,
     };
     entries.push(entry);
     await writeEntries(entries);
@@ -129,7 +198,7 @@ app.post('/api/entries', async (req, res) => {
 app.patch('/api/entries/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, boughtPrice, boughtAt: boughtAtBody, sellPrice } = req.body;
+    const { name, boughtPrice, boughtAt: boughtAtBody, sellPrice, vintedUrl } = req.body;
     const entries = await readEntries();
     const idx = entries.findIndex((e) => e.id === id);
     if (idx === -1) return res.status(404).json({ error: 'Entry not found' });
@@ -150,6 +219,9 @@ app.patch('/api/entries/:id', async (req, res) => {
     } else if (sellPrice === null || sellPrice === '') {
       entries[idx].sellPrice = null;
       entries[idx].soldAt = null;
+    }
+    if (vintedUrl !== undefined) {
+      entries[idx].vintedUrl = vintedUrl === '' ? null : String(vintedUrl).trim();
     }
     await writeEntries(entries);
     res.json(entries[idx]);

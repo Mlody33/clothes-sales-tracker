@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { addEntry } from './api';
+import { addEntry, fetchVintedItem, type VintedItem } from './api';
 
 const MONTH_NAMES = [
   'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
@@ -24,12 +24,41 @@ export function AddEntryForm({
   onAdded,
   onBack,
 }: AddEntryFormProps) {
+  const [vintedUrl, setVintedUrl] = useState('');
+  const [vintedLoading, setVintedLoading] = useState(false);
+  const [vintedError, setVintedError] = useState('');
+  const [vintedItem, setVintedItem] = useState<VintedItem | null>(null);
   const [name, setName] = useState('');
   const [boughtPrice, setBoughtPrice] = useState('');
   const [sellPrice, setSellPrice] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  async function handleVintedUrl(url: string) {
+    const trimmed = url.trim();
+    setVintedUrl(trimmed);
+    setVintedError('');
+    setVintedItem(null);
+    if (!trimmed || !/^https:\/\/www\.vinted\./i.test(trimmed)) return;
+    setVintedLoading(true);
+    try {
+      const item = await fetchVintedItem(trimmed);
+      setVintedItem(item);
+      if (item.title) setName(item.title);
+      if (item.date) {
+        const d = new Date(item.date);
+        if (!isNaN(d.getTime())) {
+          onBoughtMonthChange(d.getUTCMonth() + 1);
+          onBoughtYearChange(d.getUTCFullYear());
+        }
+      }
+    } catch (err) {
+      setVintedError(err instanceof Error ? err.message : 'Błąd pobierania danych');
+    } finally {
+      setVintedLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,6 +77,7 @@ export function AddEntryForm({
         boughtPrice: bp,
         boughtDate,
         sellPrice: sellPrice === '' ? '' : parseFloat(sellPrice) || undefined,
+        vintedUrl: vintedUrl.trim() || undefined,
       });
       setSuccess(true);
       setName('');
@@ -77,6 +107,32 @@ export function AddEntryForm({
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
+        <label className="label">
+          <span>Link Vinted <em>opcjonalnie – uzupełni nazwę</em></span>
+          <input
+            type="url"
+            value={vintedUrl}
+            onChange={(e) => handleVintedUrl(e.target.value)}
+            placeholder="https://www.vinted.pl/items/..."
+            autoComplete="off"
+            className="input"
+          />
+          {vintedLoading && (
+            <span className="vinted-status">Pobieranie danych…</span>
+          )}
+          {vintedError && (
+            <span className="vinted-status vinted-status--error">{vintedError}</span>
+          )}
+          {vintedItem && !vintedLoading && (
+            <span className="vinted-status">
+              {[
+                vintedItem.title,
+                vintedItem.date,
+                vintedItem.isSold ? 'sprzedane' : null,
+              ].filter(Boolean).join(' · ')}
+            </span>
+          )}
+        </label>
         <label className="label">
           <span>Nazwa ubrania</span>
           <input
