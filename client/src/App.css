@@ -536,11 +536,18 @@ body {
 }
 
 /* Search box */
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
 .search-box-wrap {
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 14px;
+  flex: 1;
 }
 
 .search-box-icon {
@@ -658,6 +665,21 @@ body {
   align-items: center;
   justify-content: center;
   min-width: 3ch; /* keep width stable when switching Dziś ↔ Rok */
+}
+
+.list-filter-unsold {
+  flex-shrink: 0;
+  min-height: 42px;
+  font-size: 13px;
+  padding: 0 12px;
+  margin-top: 0;
+  box-sizing: border-box;
+}
+
+.list-filter-unsold--active {
+  background: rgba(197, 48, 48, 0.13);
+  color: var(--danger);
+  border-color: rgba(197, 48, 48, 0.3);
 }
 
 /* Monthly stats */
@@ -801,6 +823,7 @@ body {
 
 .entry-item--unsold {
   background: rgba(250, 248, 245, 0.9);
+  border-left: 3px solid rgba(197, 48, 48, 0.5);
 }
 
 .entry-unsold-badge {

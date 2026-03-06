@@ -108,6 +108,7 @@ export function EntryList({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [todayStatIndex, setTodayStatIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showUnsoldOnly, setShowUnsoldOnly] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -334,9 +335,10 @@ export function EntryList({
     if (effectiveMonth != null && d.getMonth() + 1 !== effectiveMonth) return false;
     return true;
   });
-  const filteredEntries = searchActive
+  const filteredEntries = (searchActive
     ? safeEntries.filter((e) => normalize(e.name).includes(normalize(searchQuery.trim())))
-    : periodEntries;
+    : periodEntries
+  ).filter((e) => !showUnsoldOnly || e.sellPrice == null);
 
   const byMonth = groupEntriesByMonth(filteredEntries);
   const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
@@ -750,6 +752,33 @@ export function EntryList({
         );
       })()}
 
+      {/* Search + unsold filter */}
+      <div className="search-row">
+        <div className="search-box-wrap">
+          <svg className="search-box-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input
+            type="search"
+            className="search-box-input"
+            placeholder="Szukaj po nazwie…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoComplete="off"
+          />
+          {searchQuery && (
+            <button type="button" className="search-box-clear" onClick={() => setSearchQuery('')} aria-label="Wyczyść">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          className={`btn list-filter-unsold${showUnsoldOnly ? ' list-filter-unsold--active' : ''}`}
+          onClick={() => setShowUnsoldOnly((v) => !v)}
+        >
+          Nie sprzedane
+        </button>
+      </div>
+
       {/* Stats: one card for selected month or aggregated for whole year */}
       <AnimatePresence>
       {!searchActive && stats.length > 0 && (() => {
@@ -893,24 +922,6 @@ export function EntryList({
           : null;
       })()}
       </AnimatePresence>
-
-      {/* Search */}
-      <div className="search-box-wrap">
-        <svg className="search-box-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input
-          type="search"
-          className="search-box-input"
-          placeholder="Szukaj po nazwie…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          autoComplete="off"
-        />
-        {searchQuery && (
-          <button type="button" className="search-box-clear" onClick={() => setSearchQuery('')} aria-label="Wyczyść">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
-        )}
-      </div>
 
       {/* List by month – key by filter so list animates when switching e.g. Dziś ↔ Rok */}
       <section className="entries-by-month">
