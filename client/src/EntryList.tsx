@@ -711,7 +711,16 @@ export function EntryList({
       transition={{ duration: 0.2 }}
     >
       <div className="screen-title-row">
-        <h2 className="screen-title"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ display: 'inline-block', verticalAlign: '-0.15em', marginRight: 8 }}><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>Moja Szafa</h2>
+        <h2 className="screen-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <motion.span
+            animate={{ rotate: [-10, 10, -10] }}
+            transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ display: 'inline-flex', transformOrigin: '50% 0%' }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>
+          </motion.span>
+          Moja Szafa
+        </h2>
         <div className="screen-title-stats" aria-live="polite">
           <AnimatePresence mode="wait" initial={false}>
             {todayStats.length > 0 && (
