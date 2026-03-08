@@ -608,16 +608,6 @@ body {
   align-items: center;
 }
 
-.list-filter-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  flex: 1 1 0;
-  min-width: 0;
-}
 
 .list-filter-select {
   min-width: 0;
@@ -911,11 +901,6 @@ body {
   flex-shrink: 0;
 }
 
-.entry-meta-sep {
-  margin: 0 4px;
-  color: rgba(44, 42, 38, 0.25);
-  font-weight: 400;
-}
 
 .entry-date {
   font-size: 0.75rem;
@@ -953,12 +938,6 @@ body {
   font-weight: 300;
 }
 
-.entry-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
 
 /* Entry detail screen (after tapping an item) */
 
@@ -1062,11 +1041,6 @@ body {
   color: var(--text-muted);
 }
 
-.entry-detail-date {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
 
 /* Edit/sell forms inside detail (keep form layout) */
 .entry-detail-content .entry-edit-form.vertical,
@@ -1076,17 +1050,6 @@ body {
   gap: 16px;
 }
 
-.detail-value {
-  padding: 14px 16px;
-  border: 1px solid #e5e1dc;
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-}
 
 .entry-detail-actions {
   display: flex;
