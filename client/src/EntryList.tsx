@@ -712,7 +712,7 @@ export function EntryList({
               {availableYears.map((y) => {
                 const months = [...new Set(
                   stats.filter((s) => s.month.startsWith(String(y))).map((s) => parseInt(s.month.split('-')[1], 10))
-                )].sort((a, b) => b - a);
+                )].sort((a, b) => a - b);
                 return (
                   <optgroup key={y} label={String(y)}>
                     <option value={`${y}`}>Cały rok</option>
@@ -971,7 +971,7 @@ export function EntryList({
       <section className="entries-by-month">
         <AnimatePresence mode="popLayout">
           <motion.div
-            key={searchActive ? 'search' : `list-${effectiveYear}-${effectiveMonth ?? 'all'}`}
+            key={searchActive ? `search-${searchQuery.trim()}` : `list-${effectiveYear}-${effectiveMonth ?? 'all'}`}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -14 }}
