@@ -235,7 +235,7 @@ export function EntryList({
         : []),
       {
         key: 'worst-revenue',
-        text: `Najgorszy zysk: ${worstRevenue >= 0 ? '+' : ''}${worstRevenue.toFixed(2)} zł`,
+        text: `Największa strata: ${worstRevenue >= 0 ? '+' : ''}${worstRevenue.toFixed(2)} zł`,
       },
       ...(worstRevenueMonthText
         ? [{ key: 'worst-month' as const, text: `Najgorszy: ${worstRevenueMonthText}` }]

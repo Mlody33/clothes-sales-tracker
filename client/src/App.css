@@ -823,7 +823,6 @@ body {
   background: var(--surface);
   border-radius: var(--radius);
   border: 1px solid rgba(44, 42, 38, 0.06);
-  padding: 18px 20px;
   box-shadow: 0 1px 3px rgba(44, 42, 38, 0.04);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -833,7 +832,7 @@ body {
 }
 
 .entry-item--unsold {
-  background: rgba(250, 248, 245, 0.9);
+  background: rgb(255, 247, 247);
   border-left: 3px solid rgba(197, 48, 48, 0.5);
 }
 
@@ -931,7 +930,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0;
+  padding: 18px 20px;
   border: none;
   background: none;
   text-align: left;
