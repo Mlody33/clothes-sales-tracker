@@ -46,7 +46,7 @@ export function AddEntryForm({
       }
       const top = Object.entries(freq)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 6)
+        .slice(0, 5)
         .map(([p]) => Number(p))
         .sort((a, b) => a - b);
       setPriceSuggestions(top);

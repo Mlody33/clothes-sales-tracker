@@ -181,14 +181,14 @@ export function EntryList({
         text: `Rekord zysku: ${bestRevenue >= 0 ? '+' : ''}${bestRevenue.toFixed(2)} zł`,
       },
       ...(bestRevenueMonthText
-        ? [{ key: 'best-month' as const, text: `Najlepszy miesiąc: ${bestRevenueMonthText}` }]
+        ? [{ key: 'best-month' as const, text: `Najlepszy: ${bestRevenueMonthText}` }]
         : []),
       {
         key: 'worst-revenue',
         text: `Najgorszy zysk: ${worstRevenue >= 0 ? '+' : ''}${worstRevenue.toFixed(2)} zł`,
       },
       ...(worstRevenueMonthText
-        ? [{ key: 'worst-month' as const, text: `Najgorszy miesiąc: ${worstRevenueMonthText}` }]
+        ? [{ key: 'worst-month' as const, text: `Najgorszy: ${worstRevenueMonthText}` }]
         : []),
     ];
   }, [entries]);
@@ -681,44 +681,48 @@ export function EntryList({
         </div>
       </div>
 
-      {/* Year + month filter */}
+      {/* Period filter */}
       {(() => {
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth() + 1;
         const isTodaySelected = filterYear === currentYear && filterMonth === currentMonth;
+
+        const currentValue = effectiveMonth != null
+          ? `${effectiveYear}-${String(effectiveMonth).padStart(2, '0')}`
+          : `${effectiveYear}`;
+
         return (
           <div className="list-filter">
-            <label className="list-filter-label">
-              <span>Rok</span>
-              <select
-                className="list-filter-select"
-                value={effectiveYear}
-                onChange={(e) => {
-                  onFilterYearChange(Number(e.target.value));
-                }}
-              >
-                {availableYears.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </label>
-            <label className="list-filter-label">
-              <span>Miesiąc</span>
-              <select
-                className="list-filter-select"
-                value={effectiveMonth ?? ''}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  onFilterMonthChange(v === '' ? null : Number(v));
-                }}
-              >
-                <option value="">Cały rok</option>
-                {availableMonthsForYear.map((monthNum) => (
-                  <option key={monthNum} value={monthNum}>{MONTH_NAMES[monthNum - 1]}</option>
-                ))}
-              </select>
-            </label>
+            <select
+              className="list-filter-select list-filter-period"
+              value={currentValue}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v.includes('-')) {
+                  const [y, m] = v.split('-');
+                  onFilterYearChange(Number(y));
+                  onFilterMonthChange(Number(m));
+                } else {
+                  onFilterYearChange(Number(v));
+                  onFilterMonthChange(null);
+                }
+              }}
+            >
+              {availableYears.map((y) => {
+                const months = [...new Set(
+                  stats.filter((s) => s.month.startsWith(String(y))).map((s) => parseInt(s.month.split('-')[1], 10))
+                )].sort((a, b) => b - a);
+                return (
+                  <optgroup key={y} label={String(y)}>
+                    <option value={`${y}`}>Cały rok</option>
+                    {months.map((m) => (
+                      <option key={m} value={`${y}-${String(m).padStart(2, '0')}`}>{MONTH_NAMES[m - 1]}</option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </select>
             <button
               type="button"
               className="btn btn-primary list-filter-today"
@@ -732,18 +736,32 @@ export function EntryList({
                 }
               }}
             >
-              <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isTodaySelected ? 'icon-year' : 'icon-month'}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  style={{ display: 'inline-flex', marginRight: 6, flexShrink: 0 }}
+                >
+                  {isTodaySelected
+                    ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><line x1="8" x2="8" y1="14" y2="14"/></svg>
+                  }
+                </motion.span>
+              </AnimatePresence>
               <span className="list-filter-today-label">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
-                    key={isTodaySelected ? 'rok' : 'dzis'}
+                    key={isTodaySelected ? 'year' : 'month'}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
                     style={{ display: 'inline-block' }}
                   >
-                    {isTodaySelected ? 'Rok' : 'Dziś'}
+                    {isTodaySelected ? 'Ten rok' : 'Ten miesiąc'}
                   </motion.span>
                 </AnimatePresence>
               </span>
@@ -775,7 +793,33 @@ export function EntryList({
           className={`btn list-filter-unsold${showUnsoldOnly ? ' list-filter-unsold--active' : ''}`}
           onClick={() => setShowUnsoldOnly((v) => !v)}
         >
-          Nie sprzedane
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={showUnsoldOnly ? 'icon-all' : 'icon-unsold'}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+              style={{ display: 'inline-flex', marginRight: 5, flexShrink: 0 }}
+            >
+              {showUnsoldOnly
+                ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/><line x1="16" y1="6" x2="6" y2="16"/></svg>
+              }
+            </motion.span>
+          </AnimatePresence>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={showUnsoldOnly ? 'wszystkie' : 'nie-sprzedane'}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+              style={{ display: 'inline-block' }}
+            >
+              {showUnsoldOnly ? 'Wszystkie' : 'Nie sprzedane'}
+            </motion.span>
+          </AnimatePresence>
         </button>
       </div>
 
@@ -925,9 +969,9 @@ export function EntryList({
 
       {/* List by month – key by filter so list animates when switching e.g. Dziś ↔ Rok */}
       <section className="entries-by-month">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           <motion.div
-            key={searchActive ? `search-${searchQuery}` : `list-${effectiveYear}-${effectiveMonth ?? 'all'}`}
+            key={searchActive ? 'search' : `list-${effectiveYear}-${effectiveMonth ?? 'all'}`}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -14 }}

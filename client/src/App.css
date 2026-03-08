@@ -543,6 +543,7 @@ body {
   margin-bottom: 14px;
 }
 
+
 .search-box-wrap {
   position: relative;
   display: flex;
@@ -560,7 +561,8 @@ body {
 
 .search-box-input {
   width: 100%;
-  padding: 10px 36px 10px 36px;
+  height: 42px;
+  padding: 0 36px;
   border-radius: var(--radius-sm);
   border: 1.5px solid rgba(44, 42, 38, 0.13);
   background: rgba(255, 255, 255, 0.7);
@@ -569,6 +571,7 @@ body {
   outline: none;
   transition: border-color 0.15s;
   -webkit-appearance: none;
+  box-sizing: border-box;
 }
 
 .search-box-input:focus {
@@ -600,9 +603,9 @@ body {
 .list-filter {
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px 14px;
+  gap: 8px;
   margin-bottom: 14px;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .list-filter-label {
@@ -644,11 +647,16 @@ body {
   box-sizing: border-box;
 }
 
+.list-filter-period {
+  flex: 1;
+  height: 42px;
+  box-sizing: border-box;
+}
+
 .list-filter-today {
-  margin-left: auto;
   margin-top: 0;
   flex-shrink: 0;
-  min-width: 72px;
+  width: 140px;
   min-height: 42px;
   height: 42px;
   padding: 0 14px;
@@ -664,16 +672,19 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 3ch; /* keep width stable when switching Dziś ↔ Rok */
+  min-width: 8ch; /* keep width stable when switching Ten miesiąc ↔ Ten rok */
 }
 
 .list-filter-unsold {
   flex-shrink: 0;
+  width: 140px;
   min-height: 42px;
   font-size: 13px;
   padding: 0 12px;
   margin-top: 0;
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
 }
 
 .list-filter-unsold--active {
