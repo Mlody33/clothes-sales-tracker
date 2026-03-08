@@ -336,7 +336,7 @@ export function EntryList({
     return true;
   });
   const filteredEntries = (searchActive
-    ? safeEntries.filter((e) => normalize(e.name).includes(normalize(searchQuery.trim())))
+    ? periodEntries.filter((e) => normalize(e.name).includes(normalize(searchQuery.trim())))
     : periodEntries
   ).filter((e) => !showUnsoldOnly || e.sellPrice == null);
 
