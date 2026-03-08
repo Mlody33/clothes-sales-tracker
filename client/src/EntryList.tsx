@@ -333,7 +333,7 @@ export function EntryList({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <h2 className="screen-title">Wszystkie ubrania</h2>
+        <h2 className="screen-title"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ display: 'inline-block', verticalAlign: '-0.15em', marginRight: 8 }}><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>Moja Szafa</h2>
         <div className="loading-wrap">
           <motion.div
             className="spinner"
@@ -349,7 +349,7 @@ export function EntryList({
   if (error) {
     return (
       <motion.div className="list-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2 className="screen-title">Wszystkie ubrania</h2>
+        <h2 className="screen-title"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ display: 'inline-block', verticalAlign: '-0.15em', marginRight: 8 }}><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>Moja Szafa</h2>
         <p className="message error">{error}</p>
         <button type="button" className="btn" onClick={load}>
           Spróbuj ponownie
@@ -711,7 +711,7 @@ export function EntryList({
       transition={{ duration: 0.2 }}
     >
       <div className="screen-title-row">
-        <h2 className="screen-title">Wszystkie ubrania</h2>
+        <h2 className="screen-title"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ display: 'inline-block', verticalAlign: '-0.15em', marginRight: 8 }}><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>Moja Szafa</h2>
         <div className="screen-title-stats" aria-live="polite">
           <AnimatePresence mode="wait" initial={false}>
             {todayStats.length > 0 && (
@@ -1035,7 +1035,11 @@ export function EntryList({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            {searchActive ? `Brak wyników dla „${searchQuery}".` : 'Brak pozycji. Dodaj pierwszą z zakładki Dodaj.'}
+            {searchActive
+  ? `Brak wyników dla „${searchQuery}".`
+  : showUnsoldOnly
+    ? 'Filtr "Nie sprzedane" jest aktywny. Wszystkie pozycje w tym okresie zostały sprzedane!'
+    : 'Brak pozycji. Dodaj pierwszą z zakładki Dodaj.'}
           </motion.p>
         ) : (
           months.map((monthKey) => (
@@ -1046,7 +1050,19 @@ export function EntryList({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: 0.03 }}
             >
-              <h4 className="month-heading">{formatMonth(monthKey)}</h4>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.h4
+                  key={`${monthKey}-${showUnsoldOnly}`}
+                  className="month-heading"
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6, opacity: 0.6 }}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                  {formatMonth(monthKey)}
+                </motion.h4>
+              </AnimatePresence>
               <ul className="entry-list">
                 <AnimatePresence mode="popLayout">
                   {byMonth[monthKey].map((entry, idx) => (
