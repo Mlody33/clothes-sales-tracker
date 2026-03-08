@@ -1045,7 +1045,6 @@ export function EntryList({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: 0.03 }}
-              layout
             >
               <h4 className="month-heading">{formatMonth(monthKey)}</h4>
               <ul className="entry-list">

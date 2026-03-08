@@ -685,12 +685,13 @@ body {
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  background: rgba(197, 48, 48, 0.13);
+  color: var(--danger);
 }
 
 .list-filter-unsold--active {
-  background: rgba(197, 48, 48, 0.13);
-  color: var(--danger);
-  border-color: rgba(197, 48, 48, 0.3);
+  background: rgba(44, 42, 38, 0.1);
+  color: var(--text);
 }
 
 /* Monthly stats */
@@ -832,7 +833,7 @@ body {
 }
 
 .entry-item--unsold {
-  background: rgb(255, 247, 247);
+  background: linear-gradient(to right, rgba(255, 180, 180, 0.2) 0%, rgba(255, 180, 180, 0.06) 10%, #ffffff 40%);
   border-left: 3px solid rgba(197, 48, 48, 0.5);
 }
 
