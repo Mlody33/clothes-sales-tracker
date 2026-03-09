@@ -132,6 +132,7 @@ export default function App() {
                   filterMonth={filterMonth}
                   onFilterYearChange={setFilterYear}
                   onFilterMonthChange={setFilterMonth}
+                  addedCount={listKey}
                 />
               </motion.div>
             )}

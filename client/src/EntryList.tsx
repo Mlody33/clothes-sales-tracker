@@ -132,6 +132,7 @@ interface EntryListProps {
   filterMonth: number | null;
   onFilterYearChange: (year: number) => void;
   onFilterMonthChange: (month: number | null) => void;
+  addedCount?: number;
 }
 
 export function EntryList({
@@ -141,6 +142,7 @@ export function EntryList({
   filterMonth,
   onFilterYearChange,
   onFilterMonthChange,
+  addedCount = 0,
 }: EntryListProps) {
   const [entries, setEntries] = useState<ClothesEntry[]>([]);
   const [stats, setStats] = useState<MonthlyStat[]>([]);
@@ -160,6 +162,27 @@ export function EntryList({
   const [searchQuery, setSearchQuery] = useState('');
   const [showUnsoldOnly, setShowUnsoldOnly] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [easterEgg, setEasterEgg] = useState<'idle' | 'active' | 'resetting'>('idle');
+  const [easterEggCount, setEasterEggCount] = useState(0);
+
+  useEffect(() => {
+    if (addedCount > 0) {
+      setEasterEgg('active');
+      setEasterEggCount(c => c + 1);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (easterEgg === 'active') {
+      const t = setTimeout(() => setEasterEgg('resetting'), 850);
+      return () => clearTimeout(t);
+    }
+    if (easterEgg === 'resetting') {
+      const t = setTimeout(() => setEasterEgg('idle'), 50);
+      return () => clearTimeout(t);
+    }
+  }, [easterEgg]);
 
   async function load() {
     setLoading(true);
@@ -736,13 +759,46 @@ export function EntryList({
     >
       <div className="screen-title-row">
         <h2 className="screen-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <motion.span
-            animate={{ rotate: [-10, 10, -10] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ display: 'inline-flex', transformOrigin: '50% 0%' }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>
-          </motion.span>
+          <span style={{ position: 'relative', display: 'inline-flex' }}>
+            <motion.span
+              animate={
+                easterEgg === 'active'   ? { rotate: [0, -25, 25, -15, 720], scale: [1, 1.4, 1.4, 1.6, 1] } :
+                easterEgg === 'resetting'? { rotate: 0, scale: 1 } :
+                                           { rotate: [0, 10, 0, -10, 0] }
+              }
+              transition={
+                easterEgg === 'active'    ? { duration: 0.85, ease: [0.36, 0.07, 0.19, 0.97], times: [0, 0.2, 0.4, 0.6, 1] } :
+                easterEgg === 'resetting' ? { duration: 0 } :
+                                            { duration: 2.8, repeat: Infinity, ease: ['easeOut', 'easeIn', 'easeOut', 'easeIn'], times: [0, 0.25, 0.5, 0.75, 1] }
+              }
+              style={{ display: 'inline-flex', transformOrigin: '50% 0%', cursor: 'pointer' }}
+              onClick={() => {
+                if (easterEgg !== 'idle') return;
+                setEasterEgg('active');
+                setEasterEggCount(c => c + 1);
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>
+            </motion.span>
+            <AnimatePresence>
+              {easterEgg === 'active' && ['👕','👗','👔','👖','🧥','👟','🧣'].map((emoji, i) => {
+                const angle = (i / 7) * 2 * Math.PI;
+                const dist = 48 + Math.random() * 20;
+                return (
+                  <motion.span
+                    key={`${easterEggCount}-${i}`}
+                    style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', fontSize: 14, lineHeight: 1 }}
+                    initial={{ x: 0, y: 0, opacity: 1, scale: 0, rotate: 0 }}
+                    animate={{ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, opacity: 0, scale: 1.2, rotate: (i % 2 === 0 ? 1 : -1) * 180 }}
+                    exit={{}}
+                    transition={{ duration: 0.7, ease: 'easeOut', delay: i * 0.04 }}
+                  >
+                    {emoji}
+                  </motion.span>
+                );
+              })}
+            </AnimatePresence>
+          </span>
           Moja Szafa
         </h2>
         <div className="screen-title-stats" aria-live="polite">
