@@ -1,3 +1,8 @@
+export interface EntryTag {
+  type: 'size' | 'source';
+  value: string;
+}
+
 export interface ClothesEntry {
   id: string;
   name: string;
@@ -7,6 +12,7 @@ export interface ClothesEntry {
   soldAt: string | null;
   createdAt: string;
   vintedUrl?: string | null;
+  tags?: EntryTag[];
 }
 
 export interface MonthlyStat {

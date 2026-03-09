@@ -2,7 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef, useMemo, type ReactNode }
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchEntries, fetchMonthlyStats, deleteEntry, updateEntrySellPrice, updateEntry } from './api';
-import type { ClothesEntry, MonthlyStat } from './types';
+import type { ClothesEntry, MonthlyStat, EntryTag } from './types';
 
 const MONTH_NAMES = [
   'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
@@ -159,6 +159,7 @@ export function EntryList({
   const [todayStatIndex, setTodayStatIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [showUnsoldOnly, setShowUnsoldOnly] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   async function load() {
     setLoading(true);
@@ -202,8 +203,7 @@ export function EntryList({
         : Math.min(...soldEntries.map((e) => e.sellPrice! - e.boughtPrice));
     const profitByMonth: Record<string, number> = {};
     for (const e of soldEntries) {
-      if (!e.soldAt) continue;
-      const d = new Date(e.soldAt);
+      const d = new Date(getBoughtAt(e));
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       profitByMonth[key] = (profitByMonth[key] ?? 0) + (e.sellPrice! - e.boughtPrice);
     }
@@ -388,7 +388,31 @@ export function EntryList({
   const filteredEntries = (searchActive
     ? periodEntries.filter((e) => normalize(e.name).includes(normalize(searchQuery.trim())))
     : periodEntries
-  ).filter((e) => !showUnsoldOnly || e.sellPrice == null);
+  )
+    .filter((e) => !showUnsoldOnly || e.sellPrice == null)
+    .filter((e) => selectedTags.length === 0 || selectedTags.every((t) => e.tags?.some((tag) => tag.value === t)));
+
+  const allTagsMap = new Map<string, EntryTag>();
+  for (const e of safeEntries) {
+    for (const tag of (e.tags ?? [])) {
+      if (!allTagsMap.has(tag.value)) allTagsMap.set(tag.value, tag);
+    }
+  }
+  const seenTags = new Map<string, EntryTag>();
+  for (const e of periodEntries) {
+    for (const tag of (e.tags ?? [])) {
+      if (!seenTags.has(tag.value)) seenTags.set(tag.value, tag);
+    }
+  }
+  for (const value of selectedTags) {
+    if (!seenTags.has(value) && allTagsMap.has(value)) {
+      seenTags.set(value, allTagsMap.get(value)!);
+    }
+  }
+  const availableTags = [
+    ...[...seenTags.values()].filter((t) => t.type === 'size').sort((a, b) => a.value.localeCompare(b.value)),
+    ...[...seenTags.values()].filter((t) => t.type === 'source').sort((a, b) => a.value.localeCompare(b.value)),
+  ];
 
   const byMonth = groupEntriesByMonth(filteredEntries);
   const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
@@ -830,6 +854,7 @@ export function EntryList({
       })()}
 
       {/* Search + unsold filter */}
+      {/* Search – full width */}
       <div className="search-row">
         <div className="search-box-wrap">
           <svg className="search-box-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -847,39 +872,39 @@ export function EntryList({
             </button>
           )}
         </div>
+      </div>
+
+      {/* Filter chips row: unsold toggle + tag chips */}
+      <div className="tag-filter-row" style={{ marginBottom: 14 }}>
         <button
           type="button"
-          className={`btn list-filter-unsold${showUnsoldOnly ? ' list-filter-unsold--active' : ''}`}
+          className={`tag-chip tag-chip--unsold${showUnsoldOnly ? ' tag-chip--unsold-active' : ''}`}
           onClick={() => setShowUnsoldOnly((v) => !v)}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={showUnsoldOnly ? 'icon-all' : 'icon-unsold'}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-              style={{ display: 'inline-flex', marginRight: 5, flexShrink: 0 }}
-            >
-              {showUnsoldOnly
-                ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/><line x1="16" y1="6" x2="6" y2="16"/></svg>
-              }
-            </motion.span>
-          </AnimatePresence>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={showUnsoldOnly ? 'wszystkie' : 'nie-sprzedane'}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-              style={{ display: 'inline-block' }}
-            >
-              {showUnsoldOnly ? 'Wszystkie' : 'Nie sprzedane'}
-            </motion.span>
-          </AnimatePresence>
+          Nie sprzedane
         </button>
+        {availableTags.map((tag) => {
+          const active = selectedTags.includes(tag.value);
+          return (
+            <button
+              key={tag.value}
+              type="button"
+              className={`tag-chip tag-chip--${tag.type}${active ? ' tag-chip--active' : ''}`}
+              onClick={() =>
+                setSelectedTags((prev) =>
+                  active ? prev.filter((v) => v !== tag.value) : [...prev, tag.value]
+                )
+              }
+            >
+              {tag.value}
+            </button>
+          );
+        })}
+        {(selectedTags.length > 0 || showUnsoldOnly) && (
+          <button type="button" className="tag-chip-clear" onClick={() => { setSelectedTags([]); setShowUnsoldOnly(false); }}>
+            ✕ wyczyść
+          </button>
+        )}
       </div>
 
       {/* Stats: one card for selected month or aggregated for whole year */}
@@ -1086,7 +1111,15 @@ export function EntryList({
                         onClick={() => onSelectedEntryIdChange(entry.id)}
                       >
                         <div className="entry-main">
-                          <span className="entry-date">{formatMonthYear(getBoughtAt(entry))}</span>
+                          <span className="entry-date">
+                            <span className="entry-date-text">{formatMonthYear(getBoughtAt(entry))}</span>
+                            {entry.sellPrice == null && (
+                              <span className="entry-tag entry-tag--unsold">Nie sprzedano</span>
+                            )}
+                            {entry.tags && entry.tags.length > 0 && entry.tags.map((tag) => (
+                              <span key={tag.value} className={`entry-tag entry-tag--${tag.type}`}>{tag.value}</span>
+                            ))}
+                          </span>
                           <span className="entry-name">{entry.name}</span>
                           <div className="entry-meta">
                             <span className="entry-price">
@@ -1119,9 +1152,7 @@ export function EntryList({
                                     {(entry.sellPrice - entry.boughtPrice).toFixed(2)} zł
                                   </span>
                                 </>
-                              ) : (
-                                <span className="entry-unsold-badge">Nie sprzedano</span>
-                              )}
+                              ) : null}
                             </span>
                           </div>
                         </div>

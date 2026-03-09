@@ -9,6 +9,29 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = path.join(__dirname, 'data', 'entries.json');
 const PUBLIC_DIR = path.resolve(__dirname, 'public');
 
+const KNOWN_SOURCES = [
+  'zara', 'h&m', 'hm', 'nike', 'adidas', 'reserved', 'stradivarius',
+  'bershka', 'pull&bear', 'mango', 'cropp', 'house', 'mohito', 'shein',
+  'primark', "levi's", 'levis', 'gap', 'guess', 'boss', 'olx', 'allegro',
+  'second hand', 'secondhand', 'vinted',
+];
+
+function parseTags(name) {
+  const tags = [];
+  const sizeMatches = [...name.matchAll(/roz\.\s*([A-Z0-9]+(?:\/[A-Z0-9]+)?)/gi)];
+  for (const m of sizeMatches) {
+    tags.push({ type: 'size', value: m[1].toUpperCase() });
+  }
+  const lower = name.toLowerCase();
+  for (const source of KNOWN_SOURCES) {
+    if (lower.includes(source)) {
+      tags.push({ type: 'source', value: source.toUpperCase() });
+      break; // one source per item
+    }
+  }
+  return tags;
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -110,7 +133,7 @@ app.get('/api/entries', async (req, res) => {
     } else if (year) {
       filtered = entries.filter((e) => dateFor(e).getFullYear() === parseInt(year, 10));
     }
-    res.json(filtered);
+    res.json(filtered.map((e) => ({ ...e, tags: parseTags(e.name) })));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to read entries' });
