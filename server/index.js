@@ -117,6 +117,50 @@ app.get('/api/vinted-item', async (req, res) => {
   }
 });
 
+// GET most common bought prices
+app.get('/api/price-suggestions', async (req, res) => {
+  try {
+    const entries = await readEntries();
+    const freq = {};
+    for (const e of entries) {
+      const p = Number(e.boughtPrice);
+      if (p > 0) freq[p] = (freq[p] ?? 0) + 1;
+    }
+    const suggestions = Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([p]) => Number(p))
+      .sort((a, b) => a - b);
+    res.json(suggestions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to get price suggestions' });
+  }
+});
+
+// GET most common sizes from all entries
+app.get('/api/sizes', async (req, res) => {
+  try {
+    const entries = await readEntries();
+    const freq = {};
+    const sizeRegex = /roz\.\s*([A-Z0-9]+(?:\/[A-Z0-9]+)?)/gi;
+    for (const e of entries) {
+      for (const m of e.name.matchAll(sizeRegex)) {
+        const size = m[1].toUpperCase();
+        freq[size] = (freq[size] ?? 0) + 1;
+      }
+    }
+    const sizes = Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 7)
+      .map(([size]) => size);
+    res.json(sizes);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to compute sizes' });
+  }
+});
+
 // GET all entries (optionally by month for stats)
 app.get('/api/entries', async (req, res) => {
   try {

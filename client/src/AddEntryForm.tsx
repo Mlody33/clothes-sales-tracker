@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { addEntry, fetchEntries, fetchVintedItem, type VintedItem } from './api';
+import { addEntry, fetchPriceSuggestions, fetchCommonSizes, fetchVintedItem, type VintedItem } from './api';
+
 
 const MONTH_NAMES = [
   'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
@@ -36,21 +37,11 @@ export function AddEntryForm({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [priceSuggestions, setPriceSuggestions] = useState<number[]>([]);
+  const [sizeSuggestions, setSizeSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchEntries().then((entries) => {
-      const freq: Record<string, number> = {};
-      for (const e of entries) {
-        const p = Number(e.boughtPrice);
-        if (p > 0) freq[p] = (freq[p] ?? 0) + 1;
-      }
-      const top = Object.entries(freq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([p]) => Number(p))
-        .sort((a, b) => a - b);
-      setPriceSuggestions(top);
-    }).catch(() => {});
+    fetchPriceSuggestions().then(setPriceSuggestions).catch(() => {});
+    fetchCommonSizes().then(setSizeSuggestions).catch(() => {});
   }, []);
 
   async function handleVintedUrl(url: string) {
@@ -118,7 +109,6 @@ export function AddEntryForm({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <h2 className="screen-title">Dodaj pozycję</h2>
       <motion.form
         onSubmit={handleSubmit}
         className="form"
@@ -136,6 +126,29 @@ export function AddEntryForm({
             autoComplete="off"
             className="input"
           />
+          {sizeSuggestions.length > 0 && (
+            <div className="price-suggestions">
+              {sizeSuggestions.map((size) => {
+                const active = new RegExp(`roz\\.\\s*${size}\\b`, 'i').test(name);
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    className={`price-chip${active ? ' price-chip--active' : ''}`}
+                    onClick={() =>
+                      setName((prev) =>
+                        active
+                          ? prev.replace(new RegExp(`\\s*roz\\.\\s*${size}\\b`, 'i'), '').trim()
+                          : `${prev.trim()} roz. ${size}`.trim()
+                      )
+                    }
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </label>
         <label className="label">
           <span>Cena zakupu (zł)</span>

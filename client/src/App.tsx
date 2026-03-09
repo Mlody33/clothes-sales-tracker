@@ -151,8 +151,8 @@ export default function App() {
             aria-label="Dodaj pozycję"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            whileTap={{ scale: 0.92 }}
+            exit={{ scale: 0, opacity: 0, rotate: 90, transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }}
+            whileTap={{ scale: 0.88 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           >
             <span className="fab-icon" aria-hidden>＋</span>

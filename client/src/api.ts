@@ -86,6 +86,18 @@ export async function fetchVintedItem(url: string): Promise<VintedItem> {
   return data as VintedItem;
 }
 
+export async function fetchPriceSuggestions(): Promise<number[]> {
+  const res = await fetch(`${API}/price-suggestions`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function fetchCommonSizes(): Promise<string[]> {
+  const res = await fetch(`${API}/sizes`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export async function fetchMonthlyStats(): Promise<MonthlyStat[]> {
   const res = await fetch(`${API}/stats/monthly`);
   if (!res.ok) throw new Error('Failed to load stats');

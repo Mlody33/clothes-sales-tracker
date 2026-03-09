@@ -1240,8 +1240,11 @@ body {
 }
 
 .fab:hover {
-  background: rgba(224, 160, 32, 0.08);
-  box-shadow: 0 4px 16px rgba(44, 42, 38, 0.14);
+  box-shadow: 0 4px 16px rgba(44, 42, 38, 0.18);
+}
+
+.fab:hover .fab-icon {
+  transform: scale(1.25);
 }
 
 .fab:active {
@@ -1252,6 +1255,8 @@ body {
   font-size: 2.25rem;
   line-height: 1;
   font-weight: 300;
+  display: inline-block;
+  transition: transform 0.2s ease;
 }
 
 /* Reduce motion */
