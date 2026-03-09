@@ -876,35 +876,60 @@ export function EntryList({
 
       {/* Filter chips row: unsold toggle + tag chips */}
       <div className="tag-filter-row" style={{ marginBottom: 14 }}>
-        <button
-          type="button"
-          className={`tag-chip tag-chip--unsold${showUnsoldOnly ? ' tag-chip--unsold-active' : ''}`}
-          onClick={() => setShowUnsoldOnly((v) => !v)}
-        >
-          Nie sprzedane
-        </button>
-        {availableTags.map((tag) => {
-          const active = selectedTags.includes(tag.value);
-          return (
-            <button
-              key={tag.value}
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.button
+            key="unsold"
+            type="button"
+            layout
+            className={`tag-chip tag-chip--unsold${showUnsoldOnly ? ' tag-chip--unsold-active' : ''}`}
+            onClick={() => setShowUnsoldOnly((v) => !v)}
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+            whileTap={{ scale: 0.92 }}
+          >
+            Nie sprzedane
+          </motion.button>
+          {availableTags.map((tag) => {
+            const active = selectedTags.includes(tag.value);
+            return (
+              <motion.button
+                key={tag.value}
+                type="button"
+                layout
+                className={`tag-chip tag-chip--${tag.type}${active ? ' tag-chip--active' : ''}`}
+                onClick={() =>
+                  setSelectedTags((prev) =>
+                    active ? prev.filter((v) => v !== tag.value) : [...prev, tag.value]
+                  )
+                }
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+                whileTap={{ scale: 0.92 }}
+              >
+                {tag.value}
+              </motion.button>
+            );
+          })}
+          {(selectedTags.length > 0 || showUnsoldOnly) && (
+            <motion.button
+              key="clear"
               type="button"
-              className={`tag-chip tag-chip--${tag.type}${active ? ' tag-chip--active' : ''}`}
-              onClick={() =>
-                setSelectedTags((prev) =>
-                  active ? prev.filter((v) => v !== tag.value) : [...prev, tag.value]
-                )
-              }
+              className="tag-chip-clear"
+              layout
+              onClick={() => { setSelectedTags([]); setShowUnsoldOnly(false); }}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              {tag.value}
-            </button>
-          );
-        })}
-        {(selectedTags.length > 0 || showUnsoldOnly) && (
-          <button type="button" className="tag-chip-clear" onClick={() => { setSelectedTags([]); setShowUnsoldOnly(false); }}>
-            ✕ wyczyść
-          </button>
-        )}
+              ✕ wyczyść
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Stats: one card for selected month or aggregated for whole year */}
