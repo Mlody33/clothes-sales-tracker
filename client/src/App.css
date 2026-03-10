@@ -28,78 +28,13 @@
   box-sizing: border-box;
 }
 
-/* Animated gradient background – organic blobs, gentle drift */
-@keyframes gradient-drift {
-  0%, 100% {
-    background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
-  }
-  25% {
-    background-position: 0% 0%, 100% 20%, 90% 10%, 80% 80%, 10% 80%, 50% 50%;
-  }
-  50% {
-    background-position: 0% 0%, 80% 100%, 50% 90%, 20% 30%, 80% 20%, 100% 100%;
-  }
-  75% {
-    background-position: 0% 0%, 20% 80%, 15% 60%, 70% 10%, 60% 70%, 0% 0%;
-  }
-}
-
 body {
   margin: 0;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   min-height: 100dvh;
-  background:
-    /* White corner glow – bottom right (FAB area) */
-    radial-gradient(
-      ellipse 80% 65% at 105% 108%,
-      #ffffff 0%,
-      #ffffff 20%,
-      rgba(255, 255, 255, 0.85) 40%,
-      rgba(255, 255, 255, 0.4) 60%,
-      transparent 80%
-    ),
-    /* Orange blob – top/upper-right */
-    radial-gradient(
-      ellipse 100% 80% at 85% 10%,
-      rgba(255, 160, 60, 0.55) 0%,
-      rgba(255, 185, 100, 0.3) 45%,
-      transparent 65%
-    ),
-    /* Yellow blob – center/upper */
-    radial-gradient(
-      ellipse 95% 90% at 50% 25%,
-      rgba(255, 220, 80, 0.48) 0%,
-      rgba(255, 235, 150, 0.25) 50%,
-      transparent 70%
-    ),
-    /* Orange-yellow blend – lower-right */
-    radial-gradient(
-      ellipse 80% 85% at 80% 85%,
-      rgba(255, 195, 90, 0.45) 0%,
-      rgba(255, 220, 160, 0.22) 48%,
-      transparent 65%
-    ),
-    /* Yellow-orange – lower-left */
-    radial-gradient(
-      ellipse 85% 80% at 15% 80%,
-      rgba(255, 210, 70, 0.42) 0%,
-      rgba(255, 228, 140, 0.22) 50%,
-      transparent 68%
-    ),
-    /* Base – warm cream */
-    linear-gradient(
-      165deg,
-      #fff8ee 0%,
-      #fffbf2 50%,
-      #fff6e8 100%
-    );
-  background-attachment: fixed;
-  background-size: 100% 100%, 280% 280%, 260% 260%, 250% 250%, 270% 270%, 200% 200%;
-  background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
-  background-repeat: no-repeat;
-  animation: gradient-drift 35s ease-in-out infinite;
+  background: #ffffff;
 }
 
 .app {
@@ -330,14 +265,15 @@ body {
 }
 
 .btn-primary {
-  background: rgba(224, 160, 32, 0.22);
+  background: rgba(224, 160, 32, 0.28);
   color: var(--primary-btn);
   margin-top: 8px;
   box-shadow: none;
+  border: none;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: rgba(224, 160, 32, 0.22);
+  background: rgba(224, 160, 32, 0.38);
   box-shadow: none;
 }
 
@@ -1220,9 +1156,10 @@ body {
   height: var(--fab-size);
   border-radius: 50%;
   border: none;
-  background: #f5e6b8;
+  background: rgba(224, 160, 32, 0.28);
   color: var(--primary-btn);
-  box-shadow: 0 2px 12px rgba(44, 42, 38, 0.12);
+  box-shadow: none;
+  border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1254,11 +1191,6 @@ body {
 
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
-  body {
-    animation: none;
-    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-    background-position: 0% 0%, 85% 10%, 50% 25%, 80% 85%, 15% 80%, 0% 0%;
-  }
   .spinner {
     animation: none;
     border-top-color: var(--accent);
