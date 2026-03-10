@@ -254,10 +254,11 @@ body {
   cursor: pointer;
   transition: background 0.18s;
   font-family: inherit;
-  background: rgba(44, 42, 38, 0.1);
+  background: #eeebe6;
   color: var(--text);
   line-height: 1;
-  box-shadow: 0 1px 3px rgba(44, 42, 38, 0.04);
+  box-shadow: none;
+  border: 1.5px solid #ccc5bc;
 }
 
 .btn .btn-icon {
@@ -268,7 +269,7 @@ body {
 }
 
 .btn:hover:not(:disabled) {
-  background: rgba(44, 42, 38, 0.1);
+  background: #e5e0d8;
 }
 
 .btn:disabled {
@@ -297,17 +298,18 @@ body {
 
 .btn.ghost {
   background: transparent;
+  border-color: transparent;
   color: var(--text-muted);
 }
 
 .btn.danger {
-  background: rgba(197, 48, 48, 0.13);
+  background: #fde8e8;
   color: var(--danger);
-  border: none;
+  border: 1.5px solid #e8a0a0;
 }
 
 .btn.danger:hover {
-  background: rgba(197, 48, 48, 0.15);
+  background: #fbd8d8;
 }
 
 /* Messages */
