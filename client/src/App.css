@@ -35,9 +35,9 @@
   height: 100%;
   z-index: -1;
   --gradient-color-1: #fffbf0;
-  --gradient-color-2: #f59e0b;
-  --gradient-color-3: #fde68a;
-  --gradient-color-4: #fb923c;
+  --gradient-color-2: #fce4ba;
+  --gradient-color-3: #f5e8b4;
+  --gradient-color-4: #f4dabf;
 }
 
 body {
@@ -277,15 +277,15 @@ body {
 }
 
 .btn-primary {
-  background: rgba(224, 160, 32, 0.28);
-  color: var(--primary-btn);
+  background: #fef3d0;
+  color: #b07800;
   margin-top: 8px;
   box-shadow: none;
-  border: none;
+  border: 1.5px solid #d4a030;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: rgba(224, 160, 32, 0.38);
+  background: #fdedb8;
   box-shadow: none;
 }
 
@@ -504,7 +504,7 @@ body {
   padding: 0 36px;
   border-radius: var(--radius-sm);
   border: 1.5px solid rgba(44, 42, 38, 0.13);
-  background: rgba(255, 255, 255, 0.7);
+  background: #ffffff;
   font-size: 16px;
   color: var(--text);
   outline: none;
@@ -610,8 +610,8 @@ body {
 }
 
 .tag-chip.tag-chip--unsold-active {
-  background: rgba(197, 48, 48, 0.15);
-  border-color: rgba(197, 48, 48, 0.4);
+  background: #fde8e8;
+  border-color: #f0b0b0;
   color: var(--danger);
 }
 
@@ -754,8 +754,8 @@ body {
 }
 
 .entry-item--unsold {
-  background: linear-gradient(to right, rgba(255, 180, 180, 0.2) 0%, rgba(255, 180, 180, 0.06) 10%, #ffffff 40%);
-  border-left: 3px solid rgba(197, 48, 48, 0.5);
+  background: linear-gradient(to right, #fde8e8 0%, #fdf2f2 10%, #ffffff 40%);
+  border-left: 3px solid #e08080;
 }
 
 /* Tag filter chips row */
@@ -769,8 +769,8 @@ body {
 .tag-chip {
   padding: 8px 10px;
   border-radius: 20px;
-  border: 1px solid rgba(44, 42, 38, 0.18);
-  background: rgba(44, 42, 38, 0.06);
+  border: 1px solid #e0dbd4;
+  background: #ffffff;
   color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
@@ -782,14 +782,14 @@ body {
 }
 
 .tag-chip--size.tag-chip--active {
-  background: rgba(74, 124, 89, 0.15);
-  border-color: rgba(74, 124, 89, 0.4);
+  background: #e4f0e8;
+  border-color: #9ec4aa;
   color: var(--success);
 }
 
 .tag-chip--source.tag-chip--active {
-  background: rgba(59, 130, 246, 0.12);
-  border-color: rgba(59, 130, 246, 0.35);
+  background: #e0ecfd;
+  border-color: #93bef5;
   color: #3b82f6;
 }
 
@@ -1168,10 +1168,10 @@ body {
   height: var(--fab-size);
   border-radius: 50%;
   border: none;
-  background: rgba(224, 160, 32, 0.28);
-  color: var(--primary-btn);
+  background: #fef3d0;
+  color: #b07800;
   box-shadow: none;
-  border: none;
+  border: 1.5px solid #d4a030;
   cursor: pointer;
   display: flex;
   align-items: center;
