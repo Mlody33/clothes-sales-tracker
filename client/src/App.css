@@ -28,13 +28,25 @@
   box-sizing: border-box;
 }
 
+#gradient-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  --gradient-color-1: #fffbf0;
+  --gradient-color-2: #f59e0b;
+  --gradient-color-3: #fde68a;
+  --gradient-color-4: #fb923c;
+}
+
 body {
   margin: 0;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   min-height: 100dvh;
-  background: #ffffff;
+  background: transparent;
 }
 
 .app {
@@ -1191,6 +1203,12 @@ body {
 
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
+  #gradient-canvas {
+    display: none;
+  }
+  body {
+    background: #fffbf0;
+  }
   .spinner {
     animation: none;
     border-top-color: var(--accent);
