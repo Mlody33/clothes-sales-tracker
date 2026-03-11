@@ -57,10 +57,24 @@ body {
   position: relative;
 }
 
+.app::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, #ffffff 0%, #ffffff 30%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .main {
   flex: 1;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 1;
 }
 
 /* When detail is open, FAB is hidden — remove its padding reservation */
