@@ -371,8 +371,9 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: rgba(196, 167, 125, 0.15);
-  color: var(--accent-dark);
+  background: rgba(44, 42, 38, 0.06);
+  color: var(--text-muted);
+  border: 1px solid rgba(44, 42, 38, 0.14);
 }
 
 .message.warning .message-warning-action {
@@ -385,14 +386,14 @@ body {
   border: none;
   background: none;
   font: inherit;
-  color: var(--accent-dark);
+  color: var(--text-muted);
   text-decoration: underline;
   cursor: pointer;
   font-weight: 600;
 }
 
 .message-warning-action:hover {
-  color: var(--accent);
+  color: var(--text);
 }
 
 .input-with-action {
