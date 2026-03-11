@@ -537,6 +537,10 @@ body {
   box-sizing: border-box;
 }
 
+.search-box-input::-webkit-search-cancel-button {
+  display: none;
+}
+
 .search-box-input:focus {
   border-color: rgba(44, 42, 38, 0.3);
 }
@@ -994,6 +998,13 @@ body {
   color: rgba(44, 42, 38, 0.2);
   flex-shrink: 0;
   font-weight: 300;
+}
+
+.entry-item-chevron--visited {
+  color: #b07800;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
 }
 
 

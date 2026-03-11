@@ -15,6 +15,10 @@ export default function App() {
   const [addFormBoughtYear, setAddFormBoughtYear] = useState(now.getFullYear());
   const [filterYear, setFilterYear] = useState(now.getFullYear());
   const [filterMonth, setFilterMonth] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showUnsoldOnly, setShowUnsoldOnly] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [lastVisitedEntryId, setLastVisitedEntryId] = useState<string | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const listScrollTopRef = useRef(0);
   const shouldRestoreScrollRef = useRef(false);
@@ -44,6 +48,7 @@ export default function App() {
   function handleSelectedEntryIdChange(id: string | null) {
     if (id != null && mainRef.current) {
       listScrollTopRef.current = mainRef.current.scrollTop;
+      setLastVisitedEntryId(id);
     } else if (id == null) {
       shouldRestoreScrollRef.current = true;
     }
@@ -85,6 +90,9 @@ export default function App() {
   function handleEntryAdded() {
     setListKey((k) => k + 1);
     setTab('list');
+    setSearchQuery('');
+    setShowUnsoldOnly(false);
+    setSelectedTags([]);
   }
 
   return (
@@ -133,6 +141,13 @@ export default function App() {
                   onFilterYearChange={setFilterYear}
                   onFilterMonthChange={setFilterMonth}
                   addedCount={listKey}
+                  lastVisitedEntryId={lastVisitedEntryId}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                  showUnsoldOnly={showUnsoldOnly}
+                  onShowUnsoldOnlyChange={setShowUnsoldOnly}
+                  selectedTags={selectedTags}
+                  onSelectedTagsChange={setSelectedTags}
                 />
               </motion.div>
             )}

@@ -134,6 +134,13 @@ interface EntryListProps {
   onFilterYearChange: (year: number) => void;
   onFilterMonthChange: (month: number | null) => void;
   addedCount?: number;
+  lastVisitedEntryId?: string | null;
+  searchQuery: string;
+  onSearchQueryChange: (q: string) => void;
+  showUnsoldOnly: boolean;
+  onShowUnsoldOnlyChange: (v: boolean) => void;
+  selectedTags: string[];
+  onSelectedTagsChange: (tags: string[]) => void;
 }
 
 export function EntryList({
@@ -144,6 +151,13 @@ export function EntryList({
   onFilterYearChange,
   onFilterMonthChange,
   addedCount = 0,
+  lastVisitedEntryId,
+  searchQuery,
+  onSearchQueryChange,
+  showUnsoldOnly,
+  onShowUnsoldOnlyChange,
+  selectedTags,
+  onSelectedTagsChange,
 }: EntryListProps) {
   const [entries, setEntries] = useState<ClothesEntry[]>([]);
   const [stats, setStats] = useState<MonthlyStat[]>([]);
@@ -151,9 +165,6 @@ export function EntryList({
   const [error, setError] = useState('');
   const [editingEntry, setEditingEntry] = useState<ClothesEntry | null>(null);
   const [todayStatIndex, setTodayStatIndex] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showUnsoldOnly, setShowUnsoldOnly] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [easterEgg, setEasterEgg] = useState<'idle' | 'active' | 'resetting'>('idle');
   const [easterEggCount, setEasterEggCount] = useState(0);
 
@@ -441,7 +452,6 @@ export function EntryList({
         onDelete={handleDelete}
         onBack={() => {
           onSelectedEntryIdChange(null);
-          setSearchQuery('');
           setEditingEntry(null);
         }}
       />
@@ -617,11 +627,11 @@ export function EntryList({
             className="search-box-input"
             placeholder="Szukaj po nazwie…"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => onSearchQueryChange(e.target.value)}
             autoComplete="off"
           />
           {searchQuery && (
-            <button type="button" className="search-box-clear" onClick={() => setSearchQuery('')} aria-label="Wyczyść">
+            <button type="button" className="search-box-clear" onClick={() => onSearchQueryChange('')} aria-label="Wyczyść">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           )}
@@ -635,7 +645,7 @@ export function EntryList({
             key="unsold"
             type="button"
             className={`tag-chip tag-chip--unsold${showUnsoldOnly ? ' tag-chip--unsold-active' : ''}`}
-            onClick={() => setShowUnsoldOnly((v) => !v)}
+            onClick={() => onShowUnsoldOnlyChange(!showUnsoldOnly)}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.85 }}
@@ -652,8 +662,8 @@ export function EntryList({
                 type="button"
                 className={`tag-chip tag-chip--${tag.type}${active ? ' tag-chip--active' : ''}`}
                 onClick={() =>
-                  setSelectedTags((prev) =>
-                    active ? prev.filter((v) => v !== tag.value) : [...prev, tag.value]
+                  onSelectedTagsChange(
+                    active ? selectedTags.filter((v) => v !== tag.value) : [...selectedTags, tag.value]
                   )
                 }
                 initial={{ opacity: 0, scale: 0.85 }}
@@ -671,7 +681,7 @@ export function EntryList({
               key="clear"
               type="button"
               className="tag-chip-clear"
-              onClick={() => { setSelectedTags([]); setShowUnsoldOnly(false); }}
+              onClick={() => { onSelectedTagsChange([]); onShowUnsoldOnlyChange(false); }}
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
@@ -932,7 +942,13 @@ export function EntryList({
                             </span>
                           </div>
                         </div>
-                        <span className="entry-item-chevron" aria-hidden>→</span>
+                        {lastVisitedEntryId === entry.id ? (
+                          <span className="entry-item-chevron entry-item-chevron--visited" aria-label="Ostatnio przeglądane">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                          </span>
+                        ) : (
+                          <span className="entry-item-chevron" aria-hidden>→</span>
+                        )}
                       </button>
                     </AnimatedListItem>
                   ))}

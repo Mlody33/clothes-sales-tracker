@@ -10,7 +10,7 @@ const MONTH_NAMES = [
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
 }
 
 function formatMonthYear(iso: string): string {
