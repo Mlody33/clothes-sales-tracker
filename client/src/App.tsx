@@ -141,7 +141,7 @@ export default function App() {
       </main>
 
       <AnimatePresence>
-        {tab === 'list' && (
+        {tab === 'list' && !selectedEntryId && (
           <motion.button
             type="button"
             className="fab"

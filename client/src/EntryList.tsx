@@ -1,7 +1,8 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchEntries, fetchMonthlyStats, deleteEntry, updateEntrySellPrice, updateEntry } from './api';
+import { fetchEntries, fetchMonthlyStats, deleteEntry, updateEntry } from './api';
+import { EditEntryForm } from './EditEntryForm';
 import type { ClothesEntry, MonthlyStat, EntryTag } from './types';
 
 const MONTH_NAMES = [
@@ -148,16 +149,7 @@ export function EntryList({
   const [stats, setStats] = useState<MonthlyStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [editingSell, setEditingSell] = useState<string | null>(null);
-  const [sellPriceInput, setSellPriceInput] = useState('');
-  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editBoughtPrice, setEditBoughtPrice] = useState('');
-  const [editBoughtMonth, setEditBoughtMonth] = useState(1);
-  const [editBoughtYear, setEditBoughtYear] = useState(new Date().getFullYear());
-  const [editSellPrice, setEditSellPrice] = useState('');
-  const [editVintedUrl, setEditVintedUrl] = useState('');
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [editingEntry, setEditingEntry] = useState<ClothesEntry | null>(null);
   const [todayStatIndex, setTodayStatIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [showUnsoldOnly, setShowUnsoldOnly] = useState(false);
@@ -273,75 +265,68 @@ export function EntryList({
     return () => clearInterval(interval);
   }, [todayStats.length]);
 
+  /* Sync editingEntry when selectedEntryId changes (e.g. from parent) so detail view can render */
+  useEffect(() => {
+    if (!selectedEntryId) {
+      setEditingEntry(null);
+      return;
+    }
+    const entry = Array.isArray(entries) ? entries.find((e) => e.id === selectedEntryId) : null;
+    if (entry) {
+      setEditingEntry((prev) => (prev?.id === selectedEntryId ? prev : entry));
+    }
+  }, [selectedEntryId, entries]);
+
   async function handleDelete(id: string) {
     try {
       await deleteEntry(id);
       setEntries((prev) => prev.filter((e) => e.id !== id));
       onSelectedEntryIdChange(null);
-      setConfirmDeleteId(null);
-      cancelEditing();
-      setEditingSell(null);
+      setEditingEntry(null);
       load();
     } catch {
       setError('Nie udało się usunąć');
     }
   }
 
-  async function handleSetSellPrice(id: string) {
-    const val = parseFloat(sellPriceInput);
-    if (isNaN(val) || val < 0) return;
-    try {
-      const updated = await updateEntrySellPrice(id, val);
-      setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
-      setEditingSell(null);
-      setSellPriceInput('');
-      load();
-    } catch {
-      setError('Nie udało się zaktualizować');
-    }
-  }
-
-  function startEditing(entry: ClothesEntry) {
-    setEditingEntryId(entry.id);
-    setEditName(entry.name);
-    setEditBoughtPrice(String(entry.boughtPrice));
-    const { month, year } = isoToMonthYear(getBoughtAt(entry));
-    setEditBoughtMonth(month);
-    setEditBoughtYear(year);
-    setEditSellPrice(entry.sellPrice != null ? String(entry.sellPrice) : '');
-    setEditVintedUrl(entry.vintedUrl ?? '');
-  }
-
-  function cancelEditing() {
-    setEditingEntryId(null);
-    setEditName('');
-    setEditBoughtPrice('');
-    setEditBoughtMonth(new Date().getMonth() + 1);
-    setEditBoughtYear(new Date().getFullYear());
-    setEditSellPrice('');
-    setEditVintedUrl('');
-  }
-
-  async function handleSaveEdit(id: string) {
-    const name = editName.trim();
-    const boughtPrice = parseFloat(editBoughtPrice);
+  async function handleSaveEdit(id: string, fields: {
+    name: string;
+    boughtMonth: number;
+    boughtYear: number;
+    boughtPrice: string;
+    sellPrice: string;
+    vintedUrl: string;
+  }) {
+    const name = fields.name.trim();
+    const boughtPrice = parseFloat(fields.boughtPrice);
     if (!name || isNaN(boughtPrice) || boughtPrice < 0) return;
-    let sellPrice: number | null = null;
-    if (editSellPrice.trim() !== '') {
-      const v = parseFloat(editSellPrice);
-      if (isNaN(v) || v < 0) return;
-      sellPrice = v;
+
+    const originalEntry = editingEntry;
+    const originalSellPrice = originalEntry?.sellPrice != null ? String(originalEntry.sellPrice) : '';
+    const sellPriceChanged = fields.sellPrice.trim() !== originalSellPrice;
+
+    let sellPrice: number | null | undefined = undefined; // undefined = don't send to server
+    if (sellPriceChanged) {
+      if (fields.sellPrice.trim() !== '') {
+        const v = parseFloat(fields.sellPrice);
+        if (isNaN(v) || v < 0) return;
+        sellPrice = v;
+      } else {
+        sellPrice = null;
+      }
     }
+
     try {
       const updated = await updateEntry(id, {
         name,
         boughtPrice,
-        boughtAt: new Date(editBoughtYear, editBoughtMonth - 1, 1, 12, 0, 0, 0).toISOString(),
-        sellPrice,
-        vintedUrl: editVintedUrl.trim() || null,
+        boughtAt: new Date(fields.boughtYear, fields.boughtMonth - 1, 1, 12, 0, 0, 0).toISOString(),
+        ...(sellPriceChanged ? { sellPrice } : {}),
+        vintedUrl: fields.vintedUrl.trim() || null,
       });
       setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
-      cancelEditing();
+      setEditingEntry(null);
+      onSelectedEntryIdChange(null);
       load();
     } catch {
       setError('Nie udało się zaktualizować');
@@ -441,312 +426,25 @@ export function EntryList({
   const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
   const selectedEntry = selectedEntryId ? safeEntries.find((e) => e.id === selectedEntryId) : null;
   /* Detail view when an entry is selected */
-  if (selectedEntryId && selectedEntry) {
-    const isEditingThis = editingEntryId === selectedEntry.id;
-    const isSellingThis = editingSell === selectedEntry.id;
-
+  if (selectedEntryId && selectedEntry && editingEntry) {
+    const { month, year } = isoToMonthYear(getBoughtAt(editingEntry));
     return (
-      <motion.div
-        className="list-screen entry-detail-screen"
-        initial={{ opacity: 0, x: 32 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <div className="entry-detail-content">
-          <AnimatePresence mode="wait">
-            {isEditingThis ? (
-              <motion.div
-                key="edit-form"
-                className="entry-edit-form vertical"
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 16 }}
-                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
-              >
-                <label className="label">
-                  <span>Nazwa ubrania</span>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="np. Stara kurtka dżinsowa"
-                    className="input"
-                    autoComplete="off"
-                  />
-                </label>
-                <label className="label">
-                  <span>Miesiąc i rok zakupu</span>
-                  <div className="month-year-inputs">
-                    <select
-                      className="input month-year-select"
-                      value={editBoughtMonth}
-                      onChange={(e) => setEditBoughtMonth(Number(e.target.value))}
-                    >
-                      {MONTH_NAMES.map((name, i) => (
-                        <option key={i} value={i + 1}>{name}</option>
-                      ))}
-                    </select>
-                    <select
-                      className="input month-year-select"
-                      value={editBoughtYear}
-                      onChange={(e) => setEditBoughtYear(Number(e.target.value))}
-                    >
-                      {Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i).map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  </div>
-                </label>
-                <label className="label">
-                  <span>Cena zakupu (zł)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={editBoughtPrice}
-                    onChange={(e) => setEditBoughtPrice(e.target.value)}
-                    placeholder="0.00"
-                    className="input"
-                    inputMode="decimal"
-                  />
-                </label>
-                <label className="label">
-                  <span>Cena sprzedaży (zł) <em>opcjonalnie</em></span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={editSellPrice}
-                    onChange={(e) => setEditSellPrice(e.target.value)}
-                    placeholder="Zostaw puste, jeśli nie sprzedane"
-                    className="input"
-                    inputMode="decimal"
-                  />
-                </label>
-                <label className="label">
-                  <span>Link Vinted <em>opcjonalnie</em></span>
-                  <input
-                    type="url"
-                    value={editVintedUrl}
-                    onChange={(e) => setEditVintedUrl(e.target.value)}
-                    placeholder="https://www.vinted.pl/items/..."
-                    className="input"
-                    autoComplete="off"
-                  />
-                </label>
-                <div className="entry-detail-actions">
-                  <button type="button" className="btn btn-primary" onClick={() => handleSaveEdit(selectedEntry.id)}>
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
-                    Zapisz
-                  </button>
-                  <button type="button" className="btn danger" onClick={cancelEditing}>
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                    Anuluj
-                  </button>
-                </div>
-              </motion.div>
-            ) : isSellingThis ? (
-              <motion.div
-                key="sell-form"
-                className="sell-edit vertical"
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 16 }}
-                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
-              >
-                <label className="label">
-                  <span>Cena sprzedaży (zł)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={sellPriceInput}
-                    onChange={(e) => setSellPriceInput(e.target.value)}
-                    placeholder="0.00"
-                    className="input"
-                    inputMode="decimal"
-                    autoFocus
-                  />
-                </label>
-                <div className="entry-detail-actions">
-                  <button type="button" className="btn btn-primary" onClick={() => handleSetSellPrice(selectedEntry.id)}>
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
-                    Zapisz
-                  </button>
-                  <button
-                    type="button"
-                    className="btn danger"
-                    onClick={() => {
-                      setEditingSell(null);
-                      setSellPriceInput('');
-                    }}
-                  >
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                    Anuluj
-                  </button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="detail-view"
-                className="entry-detail-view"
-                initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -16 }}
-                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
-              >
-                <h1 className="entry-detail-heading">{selectedEntry.name}</h1>
-                <hr className="entry-detail-divider" aria-hidden />
-                <dl className="entry-detail-info">
-                  <div className="entry-detail-info-row">
-                    <dt><span className="entry-detail-label"><StatIconSpent /> Kupiono</span></dt>
-                    <dd>{selectedEntry.boughtPrice.toFixed(2)} zł</dd>
-                  </div>
-                  <div className="entry-detail-info-row">
-                    <dt>
-                      <span className="entry-detail-label">
-                        {selectedEntry.sellPrice != null ? <StatIconSold /> : <StatIconUnsoldCount />}
-                        {selectedEntry.sellPrice != null ? 'Sprzedano' : 'Status'}
-                      </span>
-                    </dt>
-                    <dd>
-                      {selectedEntry.sellPrice != null
-                        ? `${selectedEntry.sellPrice.toFixed(2)} zł`
-                        : 'Nie sprzedano'}
-                    </dd>
-                  </div>
-                  {selectedEntry.sellPrice != null && (
-                    <div className="entry-detail-revenue">
-                      <span className="entry-detail-label"><StatIconProfit /> Zysk</span>
-                      <span className={selectedEntry.sellPrice - selectedEntry.boughtPrice >= 0 ? 'positive' : 'negative'}>
-                        {(selectedEntry.sellPrice - selectedEntry.boughtPrice) >= 0 ? '+' : ''}
-                        {(selectedEntry.sellPrice - selectedEntry.boughtPrice).toFixed(2)} zł
-                      </span>
-                    </div>
-                  )}
-                </dl>
-                <hr className="entry-detail-divider" aria-hidden />
-                <div className="entry-detail-dates">
-                  <div className="entry-detail-info-row">
-                    <dt><span className="entry-detail-label"><DetailIconCalendar /> Dodano</span></dt>
-                    <dd>{formatMonthYear(selectedEntry.createdAt)}</dd>
-                  </div>
-                  <div className="entry-detail-info-row">
-                    <dt><span className="entry-detail-label"><StatIconSpent /> Kupiono</span></dt>
-                    <dd>{formatMonthYear(getBoughtAt(selectedEntry))}</dd>
-                  </div>
-                  {selectedEntry.soldAt && (
-                    <div className="entry-detail-info-row">
-                      <dt><span className="entry-detail-label"><StatIconSold /> Sprzedano</span></dt>
-                      <dd>{formatMonthYear(selectedEntry.soldAt)}</dd>
-                    </div>
-                  )}
-                </div>
-                <div className="entry-detail-actions">
-                  {selectedEntry.vintedUrl && (
-                    <a
-                      href={selectedEntry.vintedUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="vinted-link"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
-                      Otwórz na Vinted
-                    </a>
-                  )}
-                  {selectedEntry.sellPrice == null && (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => {
-                        setEditingSell(selectedEntry.id);
-                        setSellPriceInput('');
-                      }}
-                    >
-                      <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 2H2v10l9.5 9.5a2.1 2.1 0 0 0 3 0l7-7a2.1 2.1 0 0 0 0-3L12 2Z" /><path d="M7 7h.01" /></svg>
-                      Ustaw sprzedane
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => startEditing(selectedEntry)}
-                  >
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /><path d="m15 5 4 4" /></svg>
-                    Edytuj
-                  </button>
-                  <button
-                    type="button"
-                    className="btn danger"
-                    onClick={() => setConfirmDeleteId(selectedEntry.id)}
-                  >
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
-                    Usuń
-                  </button>
-                  <button
-                    type="button"
-                    className="btn back-to-list-button"
-                    onClick={() => {
-                      onSelectedEntryIdChange(null);
-                      setSearchQuery('');
-                      cancelEditing();
-                      setEditingSell(null);
-                      setSellPriceInput('');
-                    }}
-                  >
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-                    Powrót do listy
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {confirmDeleteId && createPortal(
-          <AnimatePresence>
-            <motion.div
-              key="confirm-overlay"
-              className="confirm-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setConfirmDeleteId(null)}
-            >
-              <motion.div
-                className="confirm-dialog"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <p className="confirm-message">Czy na pewno chcesz usunąć tę pozycję?</p>
-                <div className="confirm-actions">
-                  <button
-                    type="button"
-                    className="btn danger"
-                    onClick={() => confirmDeleteId && handleDelete(confirmDeleteId)}
-                  >
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
-                    Usuń
-                  </button>
-                  <button
-                    type="button"
-                    className="btn ghost"
-                    onClick={() => setConfirmDeleteId(null)}
-                  >
-                    <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                    Anuluj
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>,
-          document.body
-        )}
-      </motion.div>
+      <EditEntryForm
+        entry={editingEntry}
+        initialName={editingEntry.name}
+        initialBoughtMonth={month}
+        initialBoughtYear={year}
+        initialBoughtPrice={String(editingEntry.boughtPrice)}
+        initialSellPrice={editingEntry.sellPrice != null ? String(editingEntry.sellPrice) : ''}
+        initialVintedUrl={editingEntry.vintedUrl ?? ''}
+        onSave={(fields) => handleSaveEdit(editingEntry.id, fields)}
+        onDelete={handleDelete}
+        onBack={() => {
+          onSelectedEntryIdChange(null);
+          setSearchQuery('');
+          setEditingEntry(null);
+        }}
+      />
     );
   }
 
@@ -771,7 +469,7 @@ export function EntryList({
                 easterEgg === 'resetting' ? { duration: 0 } :
                                             { duration: 2.8, repeat: Infinity, ease: ['easeOut', 'easeIn', 'easeOut', 'easeIn'], times: [0, 0.25, 0.5, 0.75, 1] }
               }
-              style={{ display: 'inline-flex', transformOrigin: '50% 0%', cursor: 'pointer' }}
+              style={{ display: 'inline-flex', transformOrigin: '50% 0%', cursor: 'pointer', willChange: 'transform' }}
               onClick={() => {
                 if (easterEgg !== 'idle') return;
                 setEasterEgg('active');
@@ -936,7 +634,6 @@ export function EntryList({
           <motion.button
             key="unsold"
             type="button"
-            layout
             className={`tag-chip tag-chip--unsold${showUnsoldOnly ? ' tag-chip--unsold-active' : ''}`}
             onClick={() => setShowUnsoldOnly((v) => !v)}
             initial={{ opacity: 0, scale: 0.85 }}
@@ -953,7 +650,6 @@ export function EntryList({
               <motion.button
                 key={tag.value}
                 type="button"
-                layout
                 className={`tag-chip tag-chip--${tag.type}${active ? ' tag-chip--active' : ''}`}
                 onClick={() =>
                   setSelectedTags((prev) =>
@@ -975,7 +671,6 @@ export function EntryList({
               key="clear"
               type="button"
               className="tag-chip-clear"
-              layout
               onClick={() => { setSelectedTags([]); setShowUnsoldOnly(false); }}
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1154,7 +849,7 @@ export function EntryList({
   ? `Brak wyników dla „${searchQuery}".`
   : showUnsoldOnly
     ? 'Filtr "Nie sprzedane" jest aktywny. Wszystkie pozycje w tym okresie zostały sprzedane!'
-    : 'Brak pozycji. Dodaj pierwszą z zakładki Dodaj.'}
+    : 'Brak pozycji.'}
           </motion.p>
         ) : (
           months.map((monthKey) => (
@@ -1189,7 +884,7 @@ export function EntryList({
                       <button
                         type="button"
                         className="entry-item-button"
-                        onClick={() => onSelectedEntryIdChange(entry.id)}
+                        onClick={() => { onSelectedEntryIdChange(entry.id); setEditingEntry(entry); }}
                       >
                         <div className="entry-main">
                           <span className="entry-date">

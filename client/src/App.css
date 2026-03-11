@@ -63,6 +63,11 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* When detail is open, FAB is hidden — remove its padding reservation */
+.app:has(.main-detail-open) {
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
 /* When add form is shown: size main's content to the form only so there is no extra scroll */
 .main.main-add-open {
   display: flex;
@@ -201,6 +206,23 @@ body {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.input--error {
+  border-color: var(--danger) !important;
+  background: rgba(220, 60, 60, 0.04);
+}
+
+.input--error:focus {
+  outline-color: var(--danger);
+}
+
+.input-error-hint {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--danger);
+  margin-top: 4px;
+  overflow: hidden;
+}
+
 .input:focus {
   outline: none;
   border-color: var(--accent);
@@ -254,7 +276,7 @@ body {
   cursor: pointer;
   transition: background 0.18s;
   font-family: inherit;
-  background: #eeebe6;
+  background: rgba(238, 235, 230, 0.72);
   color: var(--text);
   line-height: 1;
   box-shadow: none;
@@ -278,7 +300,7 @@ body {
 }
 
 .btn-primary {
-  background: #fef3d0;
+  background: rgba(254, 243, 208, 0.72);
   color: #b07800;
   margin-top: 8px;
   box-shadow: none;
@@ -303,7 +325,7 @@ body {
 }
 
 .btn.danger {
-  background: #fde8e8;
+  background: rgba(253, 232, 232, 0.72);
   color: var(--danger);
   border: 1.5px solid #e8a0a0;
 }
@@ -612,8 +634,23 @@ body {
 }
 
 .tag-chip.tag-chip--unsold-active {
-  background: #fde8e8;
-  border-color: #f0b0b0;
+  background: rgba(220, 60, 60, 0.1);
+  border-color: rgba(220, 60, 60, 0.35);
+  color: var(--danger);
+}
+
+.tag-chip--size.tag-chip--active:hover {
+  background: rgba(60, 160, 100, 0.2);
+  color: var(--success);
+}
+
+.tag-chip--source.tag-chip--active:hover {
+  background: rgba(59, 130, 246, 0.18);
+  color: #3b82f6;
+}
+
+.tag-chip.tag-chip--unsold-active:hover {
+  background: rgba(220, 60, 60, 0.17);
   color: var(--danger);
 }
 
@@ -769,29 +806,34 @@ body {
 }
 
 .tag-chip {
-  padding: 8px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
-  border: 1px solid #e0dbd4;
-  background: #ffffff;
+  border: 1px solid rgba(44, 42, 38, 0.18);
+  background: rgba(44, 42, 38, 0.06);
   color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   font-family: inherit;
   min-height: unset;
   line-height: 1.4;
 }
 
+.tag-chip:hover {
+  background: rgba(44, 42, 38, 0.12);
+  color: var(--text);
+}
+
 .tag-chip--size.tag-chip--active {
-  background: #e4f0e8;
-  border-color: #9ec4aa;
+  background: rgba(60, 160, 100, 0.14);
+  border-color: rgba(60, 160, 100, 0.4);
   color: var(--success);
 }
 
 .tag-chip--source.tag-chip--active {
-  background: #e0ecfd;
-  border-color: #93bef5;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
   color: #3b82f6;
 }
 
@@ -1058,6 +1100,35 @@ body {
 }
 
 
+.entry-dates-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+.entry-dates-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.entry-dates-row dt {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.entry-dates-row dd {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
 /* Edit/sell forms inside detail (keep form layout) */
 .entry-detail-content .entry-edit-form.vertical,
 .entry-detail-content .sell-edit.vertical {
@@ -1170,7 +1241,7 @@ body {
   height: var(--fab-size);
   border-radius: 50%;
   border: none;
-  background: #fef3d0;
+  background: rgba(254, 243, 208, 0.72);
   color: #b07800;
   box-shadow: none;
   border: 1.5px solid #d4a030;

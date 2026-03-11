@@ -36,6 +36,7 @@ export function AddEntryForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [priceSuggestions, setPriceSuggestions] = useState<number[]>([]);
   const [sizeSuggestions, setSizeSuggestions] = useState<string[]>([]);
 
@@ -72,11 +73,11 @@ export function AddEntryForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitted(true);
     setError('');
     setSuccess(false);
     const bp = parseFloat(boughtPrice);
     if (!name.trim() || isNaN(bp) || bp < 0) {
-      setError('Wprowadź nazwę i prawidłową cenę zakupu.');
       return;
     }
     setLoading(true);
@@ -90,6 +91,7 @@ export function AddEntryForm({
         vintedUrl: vintedUrl.trim() || undefined,
       });
       setSuccess(true);
+      setSubmitted(false);
       setName('');
       setBoughtPrice('');
       setSellPrice('');
@@ -124,8 +126,21 @@ export function AddEntryForm({
             onChange={(e) => setName(e.target.value)}
             placeholder="np. Stara kurtka dżinsowa"
             autoComplete="off"
-            className="input"
+            className={`input${submitted && !name.trim() ? ' input--error' : ''}`}
           />
+          <AnimatePresence>
+            {submitted && !name.trim() && (
+              <motion.span
+                className="input-error-hint"
+                initial={{ opacity: 0, y: -4, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -4, height: 0 }}
+                transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                Nazwa jest wymagana
+              </motion.span>
+            )}
+          </AnimatePresence>
           {sizeSuggestions.length > 0 && (
             <div className="price-suggestions">
               {sizeSuggestions.map((size) => {
@@ -159,9 +174,35 @@ export function AddEntryForm({
             value={boughtPrice}
             onChange={(e) => setBoughtPrice(e.target.value)}
             placeholder="0.00"
-            className="input"
+            className={`input${submitted && (boughtPrice === '' || isNaN(parseFloat(boughtPrice)) || parseFloat(boughtPrice) < 0) ? ' input--error' : ''}`}
             inputMode="decimal"
           />
+          <AnimatePresence>
+            {submitted && boughtPrice === '' && (
+              <motion.span
+                key="empty"
+                className="input-error-hint"
+                initial={{ opacity: 0, y: -4, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -4, height: 0 }}
+                transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                Cena zakupu jest wymagana
+              </motion.span>
+            )}
+            {submitted && boughtPrice !== '' && (isNaN(parseFloat(boughtPrice)) || parseFloat(boughtPrice) < 0) && (
+              <motion.span
+                key="invalid"
+                className="input-error-hint"
+                initial={{ opacity: 0, y: -4, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -4, height: 0 }}
+                transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                Podaj prawidłową cenę (liczba ≥ 0)
+              </motion.span>
+            )}
+          </AnimatePresence>
           {priceSuggestions.length > 0 && (
             <div className="price-suggestions">
               {priceSuggestions.map((p) => (
