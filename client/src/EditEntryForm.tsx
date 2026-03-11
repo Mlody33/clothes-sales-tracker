@@ -69,7 +69,7 @@ export function EditEntryForm({
   const [boughtYear, setBoughtYear] = useState(initialBoughtYear);
   const [boughtPrice, setBoughtPrice] = useState(initialBoughtPrice);
   const [sellPrice, setSellPrice] = useState(initialSellPrice);
-  const [vintedUrl, setVintedUrl] = useState(initialVintedUrl);
+  const vintedUrl = initialVintedUrl;
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (

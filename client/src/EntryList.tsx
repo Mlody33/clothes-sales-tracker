@@ -1,5 +1,4 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchEntries, fetchMonthlyStats, deleteEntry, updateEntry } from './api';
 import { EditEntryForm } from './EditEntryForm';
@@ -71,33 +70,28 @@ function StatIconBilans() {
   return (<svg {...svgProps} aria-hidden><line x1="12" x2="12" y1="3" y2="21"/><path d="m8 7 4-4 4 4"/><path d="M16 17l-4 4-4-4"/><line x1="18" x2="6" y1="12" y2="12"/></svg>);
 }
 
-const detailIconProps = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none' as const, stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
-function DetailIconCalendar() {
-  return (<svg {...detailIconProps} aria-hidden><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>);
-}
 
 function AnimatedListItem({ className, index, children }: { className: string; index: number; children: ReactNode }) {
-  const [visible, setVisible] = useState(false);
+  const [anim, setAnim] = useState({ visible: false, delay: 0 });
   const ref = useRef<HTMLLIElement>(null);
-  const initiallyVisible = useRef(false);
 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     if (rect.top < window.innerHeight && rect.bottom > 0) {
-      initiallyVisible.current = true;
-      setVisible(true);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAnim({ visible: true, delay: index * 0.05 });
     }
-  }, []);
+  }, [index]);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || initiallyVisible.current) return;
+    if (!el || anim.visible) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisible(true);
+          setAnim({ visible: true, delay: 0 });
           observer.disconnect();
         }
       },
@@ -105,18 +99,18 @@ function AnimatedListItem({ className, index, children }: { className: string; i
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [anim.visible]);
 
   return (
     <motion.li
       ref={ref}
       className={className}
       initial={{ opacity: 0, y: 18 }}
-      animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+      animate={anim.visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
       exit={{ opacity: 0, x: 16 }}
       transition={{
         duration: 0.3,
-        delay: initiallyVisible.current ? index * 0.05 : 0,
+        delay: anim.delay,
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
       layout
