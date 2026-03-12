@@ -127,7 +127,7 @@ interface EntryListProps {
   filterMonth: number | null;
   onFilterYearChange: (year: number) => void;
   onFilterMonthChange: (month: number | null) => void;
-  addedCount?: number;
+  justAdded?: boolean;
   lastVisitedEntryId?: string | null;
   searchQuery: string;
   onSearchQueryChange: (q: string) => void;
@@ -144,7 +144,7 @@ export function EntryList({
   filterMonth,
   onFilterYearChange,
   onFilterMonthChange,
-  addedCount = 0,
+  justAdded = false,
   lastVisitedEntryId,
   searchQuery,
   onSearchQueryChange,
@@ -163,7 +163,7 @@ export function EntryList({
   const [easterEggCount, setEasterEggCount] = useState(0);
 
   useEffect(() => {
-    if (addedCount > 0) {
+    if (justAdded) {
       setEasterEgg('active');
       setEasterEggCount(c => c + 1);
     }
@@ -332,6 +332,8 @@ export function EntryList({
       setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
       setEditingEntry(null);
       onSelectedEntryIdChange(null);
+      setEasterEgg('active');
+      setEasterEggCount(c => c + 1);
       load();
     } catch {
       setError('Nie udało się zaktualizować');

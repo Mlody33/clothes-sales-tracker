@@ -72,6 +72,13 @@ export function EditEntryForm({
   const vintedUrl = initialVintedUrl;
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const hasChanges =
+    name !== initialName ||
+    boughtMonth !== initialBoughtMonth ||
+    boughtYear !== initialBoughtYear ||
+    boughtPrice !== initialBoughtPrice ||
+    sellPrice !== initialSellPrice;
+
   return (
     <motion.div
       className="list-screen entry-detail-screen"
@@ -130,16 +137,28 @@ export function EditEntryForm({
           </label>
           <label className="label">
             <span>Cena sprzedaży (zł) <em>opcjonalnie</em></span>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={sellPrice}
-              onChange={(e) => setSellPrice(e.target.value)}
-              placeholder="Zostaw puste, jeśli nie sprzedane"
-              className="input"
-              inputMode="decimal"
-            />
+            <div className="input-with-action">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={sellPrice}
+                onChange={(e) => setSellPrice(e.target.value)}
+                placeholder="Zostaw puste, jeśli nie sprzedane"
+                className="input"
+                inputMode="decimal"
+              />
+              {sellPrice !== '' && (
+                <button
+                  type="button"
+                  className="input-action-btn"
+                  onClick={() => setSellPrice('')}
+                  aria-label="Wyczyść cenę sprzedaży"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+              )}
+            </div>
           </label>
 
           <dl className="entry-dates-info">
@@ -166,6 +185,7 @@ export function EditEntryForm({
               type="button"
               className="btn btn-primary"
               onClick={() => onSave({ name, boughtMonth, boughtYear, boughtPrice, sellPrice, vintedUrl })}
+              disabled={!hasChanges}
             >
               <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
               Zapisz

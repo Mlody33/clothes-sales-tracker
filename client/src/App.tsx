@@ -19,6 +19,7 @@ export default function App() {
   const [showUnsoldOnly, setShowUnsoldOnly] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [lastVisitedEntryId, setLastVisitedEntryId] = useState<string | null>(null);
+  const [justAdded, setJustAdded] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const listScrollTopRef = useRef(0);
   const shouldRestoreScrollRef = useRef(false);
@@ -89,10 +90,12 @@ export default function App() {
 
   function handleEntryAdded() {
     setListKey((k) => k + 1);
+    setJustAdded(true);
     setTab('list');
     setSearchQuery('');
     setShowUnsoldOnly(false);
     setSelectedTags([]);
+    setTimeout(() => setJustAdded(false), 200);
   }
 
   return (
@@ -140,7 +143,7 @@ export default function App() {
                   filterMonth={filterMonth}
                   onFilterYearChange={setFilterYear}
                   onFilterMonthChange={setFilterMonth}
-                  addedCount={listKey}
+                  justAdded={justAdded}
                   lastVisitedEntryId={lastVisitedEntryId}
                   searchQuery={searchQuery}
                   onSearchQueryChange={setSearchQuery}
