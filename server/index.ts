@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile, access } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 
-const DATA_FILE = path.join(import.meta.dir, 'data', 'entries.json');
+const DATA_FILE = path.join(process.env.DATA_DIR ?? '/app/data', 'entries.json');
 const PUBLIC_DIR = path.resolve(import.meta.dir, 'public');
 const PORT = Number(process.env.PORT) || 3001;
 

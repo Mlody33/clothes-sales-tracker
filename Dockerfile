@@ -15,6 +15,8 @@ RUN mv client/dist server/public && rm -rf client
 
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV DATA_DIR=/app/data
+VOLUME ["/app/data"]
 EXPOSE 3001
 WORKDIR /app/server
 CMD ["bun", "run", "index.ts"]
