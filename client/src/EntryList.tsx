@@ -566,7 +566,7 @@ export function EntryList({
                 );
               })}
             </select>
-            <button
+            <motion.button
               type="button"
               className="btn btn-primary list-filter-today"
               onClick={() => {
@@ -578,6 +578,7 @@ export function EntryList({
                   onFilterMonthChange(currentMonth);
                 }
               }}
+              whileTap={{ scale: 0.92 }}
             >
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
@@ -608,7 +609,7 @@ export function EntryList({
                   </motion.span>
                 </AnimatePresence>
               </span>
-            </button>
+            </motion.button>
           </div>
         );
       })()}
