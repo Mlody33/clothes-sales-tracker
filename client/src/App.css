@@ -290,6 +290,7 @@ body {
   cursor: pointer;
   transition: background 0.18s;
   font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
   background: rgba(238, 235, 230, 0.72);
   color: var(--text);
   line-height: 1;
@@ -835,6 +836,7 @@ body {
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
   min-height: unset;
   line-height: 1.4;
 }
