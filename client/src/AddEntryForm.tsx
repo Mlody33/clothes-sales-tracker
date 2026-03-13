@@ -342,8 +342,7 @@ export function AddEntryForm({
           type="submit"
           className="btn btn-primary"
           disabled={loading}
-          whileTap={{ scale: 0.98 }}
-          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.92 }}
         >
           {!loading && (
             <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -353,16 +352,17 @@ export function AddEntryForm({
           {loading ? 'Dodawanie…' : 'Dodaj wpis'}
         </motion.button>
         {onBack && (
-          <button
+          <motion.button
             type="button"
             className="btn back-to-list-button"
             onClick={onBack}
+            whileTap={{ scale: 0.92 }}
           >
             <svg className="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Powrót do listy
-          </button>
+          </motion.button>
         )}
       </motion.form>
     </motion.div>

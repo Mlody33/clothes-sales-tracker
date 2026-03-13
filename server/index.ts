@@ -37,7 +37,8 @@ function parseTags(name: string): Tag[] {
   }
   const lower = name.toLowerCase();
   for (const source of KNOWN_SOURCES) {
-    if (lower.includes(source)) {
+    const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (new RegExp(`(?<![a-ząćęłńóśźż])${escaped}(?![a-ząćęłńóśźż])`, 'i').test(lower)) {
       tags.push({ type: 'source', value: source.toUpperCase() });
       break;
     }

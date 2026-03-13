@@ -640,6 +640,7 @@ export function EntryList({
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.button
             key="unsold"
+            layout
             type="button"
             className={`tag-chip tag-chip--unsold${showUnsoldOnly ? ' tag-chip--unsold-active' : ''}`}
             onClick={() => onShowUnsoldOnlyChange(!showUnsoldOnly)}
@@ -656,6 +657,7 @@ export function EntryList({
             return (
               <motion.button
                 key={tag.value}
+                layout
                 type="button"
                 className={`tag-chip tag-chip--${tag.type}${active ? ' tag-chip--active' : ''}`}
                 onClick={() =>
@@ -676,6 +678,7 @@ export function EntryList({
           {(selectedTags.length > 0 || showUnsoldOnly) && (
             <motion.button
               key="clear"
+              layout
               type="button"
               className="tag-chip-clear"
               onClick={() => { onSelectedTagsChange([]); onShowUnsoldOnlyChange(false); }}
