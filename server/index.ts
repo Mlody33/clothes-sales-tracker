@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile, access } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 
-const DATA_FILE = path.join(process.env.DATA_DIR ?? '/app/data', 'entries.json');
+const DATA_FILE = path.join(process.env.DATA_DIR ?? path.resolve(import.meta.dir, 'data'), 'entries.json');
 const PUBLIC_DIR = path.resolve(import.meta.dir, 'public');
 const PORT = Number(process.env.PORT) || 3001;
 
@@ -96,55 +96,6 @@ async function handleRequest(req: Request): Promise<Response> {
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders() });
-  }
-
-  // GET /api/vinted-item?url=...
-  if (req.method === 'GET' && pathname === '/api/vinted-item') {
-    const itemUrl = url.searchParams.get('url') ?? '';
-    if (!itemUrl || !/^https:\/\/www\.vinted\./i.test(itemUrl)) {
-      return json({ error: 'Podaj prawidłowy link Vinted' }, 400);
-    }
-    try {
-      const response = await fetch(itemUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-          'Accept': 'text/html,application/xhtml+xml',
-          'Accept-Language': 'pl-PL,pl;q=0.9',
-        },
-      });
-      if (!response.ok) return json({ error: 'Nie udało się pobrać strony Vinted' }, 502);
-
-      const html = await response.text();
-      const result: Record<string, unknown> = {};
-
-      const titleMatch = html.match(/\\"title\\":\\"([^\\"]+)\\",\\"catalog_id\\"/);
-      if (titleMatch) result.title = titleMatch[1];
-
-      const closedMatch = html.match(/\\"is_closed\\":(true|false)/);
-      const actionMatch = html.match(/\\"item_closing_action\\":\\"([^\\"]*)\\"/);
-      if (closedMatch?.[1] === 'true' && actionMatch?.[1] === 'sold') result.isSold = true;
-
-      const priceMatch = html.match(/\\"originalAskingAmount\\":\{\\"amount\\":\\"([0-9.]+)\\"/);
-      if (priceMatch) result.price = parseFloat(priceMatch[1]);
-
-      const tsMatch = html.match(/\/f\d+\/(\d{10})\.webp/);
-      if (tsMatch) result.date = new Date(Number(tsMatch[1]) * 1000).toISOString().slice(0, 10);
-
-      if (!result.title) {
-        const ogMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i)
-                     ?? html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:title"/i);
-        if (ogMatch) result.title = ogMatch[1];
-      }
-      if (!result.title) {
-        const tMatch = html.match(/<title>([^<]+)<\/title>/i);
-        if (tMatch) result.title = tMatch[1].replace(/\s*\|.*$/, '').trim();
-      }
-      if (!result.title) return json({ error: 'Nie znaleziono danych na stronie' }, 404);
-      return json(result);
-    } catch (err) {
-      console.error(err);
-      return json({ error: 'Błąd podczas pobierania danych' }, 500);
-    }
   }
 
   // GET /api/price-suggestions

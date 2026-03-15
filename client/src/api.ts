@@ -13,7 +13,6 @@ export async function addEntry(data: {
   boughtPrice: number;
   boughtDate?: string;
   sellPrice?: number | '';
-  vintedUrl?: string;
 }): Promise<ClothesEntry> {
   const body: Record<string, unknown> = {
     name: data.name,
@@ -21,7 +20,6 @@ export async function addEntry(data: {
     sellPrice: data.sellPrice === '' ? undefined : data.sellPrice,
   };
   if (data.boughtDate) body.boughtAt = new Date(data.boughtDate + 'T12:00:00.000Z').toISOString();
-  if (data.vintedUrl) body.vintedUrl = data.vintedUrl;
   const res = await fetch(`${API}/entries`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -70,20 +68,6 @@ export async function updateEntry(
 export async function deleteEntry(id: string): Promise<void> {
   const res = await fetch(`${API}/entries/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete entry');
-}
-
-export interface VintedItem {
-  title: string;
-  date?: string; // YYYY-MM-DD
-  isSold?: boolean;
-  price?: number;
-}
-
-export async function fetchVintedItem(url: string): Promise<VintedItem> {
-  const res = await fetch(`${API}/vinted-item?url=${encodeURIComponent(url)}`);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Nie udało się pobrać danych');
-  return data as VintedItem;
 }
 
 export async function fetchPriceSuggestions(): Promise<number[]> {

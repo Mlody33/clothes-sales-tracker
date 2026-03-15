@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { addEntry, fetchPriceSuggestions, fetchCommonSizes, fetchVintedItem, type VintedItem } from './api';
+import { addEntry, fetchPriceSuggestions, fetchCommonSizes } from './api';
 
 
 const MONTH_NAMES = [
@@ -25,11 +25,6 @@ export function AddEntryForm({
   onAdded,
   onBack,
 }: AddEntryFormProps) {
-  const vintedInputRef = useRef<HTMLInputElement>(null);
-  const [vintedUrl, setVintedUrl] = useState('');
-  const [vintedLoading, setVintedLoading] = useState(false);
-  const [vintedError, setVintedError] = useState('');
-  const [vintedItem, setVintedItem] = useState<VintedItem | null>(null);
   const [name, setName] = useState('');
   const [boughtPrice, setBoughtPrice] = useState('');
   const [sellPrice, setSellPrice] = useState('');
@@ -44,32 +39,6 @@ export function AddEntryForm({
     fetchPriceSuggestions().then(setPriceSuggestions).catch(() => {});
     fetchCommonSizes().then(setSizeSuggestions).catch(() => {});
   }, []);
-
-  async function handleVintedUrl(url: string) {
-    const trimmed = url.trim();
-    setVintedUrl(trimmed);
-    setVintedError('');
-    setVintedItem(null);
-    if (!trimmed || !/^https:\/\/www\.vinted\./i.test(trimmed)) return;
-    setVintedLoading(true);
-    try {
-      const item = await fetchVintedItem(trimmed);
-      setVintedItem(item);
-      if (item.title) setName(item.title);
-      if (item.isSold && item.price != null) setSellPrice(String(item.price));
-      if (item.date) {
-        const d = new Date(item.date);
-        if (!isNaN(d.getTime())) {
-          onBoughtMonthChange(d.getUTCMonth() + 1);
-          onBoughtYearChange(d.getUTCFullYear());
-        }
-      }
-    } catch (err) {
-      setVintedError(err instanceof Error ? err.message : 'Błąd pobierania danych');
-    } finally {
-      setVintedLoading(false);
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -88,7 +57,6 @@ export function AddEntryForm({
         boughtPrice: bp,
         boughtDate,
         sellPrice: sellPrice === '' ? '' : parseFloat(sellPrice) || undefined,
-        vintedUrl: vintedUrl.trim() || undefined,
       });
       setSuccess(true);
       setSubmitted(false);
@@ -277,48 +245,6 @@ export function AddEntryForm({
             className="input"
             inputMode="decimal"
           />
-        </label>
-        <label className="label">
-          <span>Link Vinted <em>opcjonalnie – uzupełni nazwę</em></span>
-          <div className="input-with-action">
-            <input
-              ref={vintedInputRef}
-              type="url"
-              value={vintedUrl}
-              onChange={(e) => handleVintedUrl(e.target.value)}
-              placeholder="https://www.vinted.pl/items/..."
-              autoComplete="off"
-              className="input"
-            />
-            <button
-              type="button"
-              className="input-action-btn"
-              onClick={() => {
-                const el = vintedInputRef.current;
-                if (!el) return;
-                el.focus();
-                document.execCommand('paste');
-              }}
-              aria-label="Wklej"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-            </button>
-          </div>
-          {vintedLoading && (
-            <span className="vinted-status">Pobieranie danych…</span>
-          )}
-          {vintedError && (
-            <span className="vinted-status vinted-status--error">{vintedError}</span>
-          )}
-          {vintedItem && !vintedLoading && (
-            <span className="vinted-status">
-              {[
-                vintedItem.title,
-                vintedItem.date,
-                vintedItem.isSold ? 'sprzedane' : null,
-              ].filter(Boolean).join(' · ')}
-            </span>
-          )}
         </label>
         {error && (
           <motion.p
