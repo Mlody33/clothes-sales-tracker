@@ -475,7 +475,7 @@ export function EntryList({
                 easterEgg === 'resetting' ? { duration: 0 } :
                                             { duration: 2.8, repeat: Infinity, ease: ['easeOut', 'easeIn', 'easeOut', 'easeIn'], times: [0, 0.25, 0.5, 0.75, 1] }
               }
-              style={{ display: 'inline-flex', transformOrigin: '50% 0%', cursor: 'pointer', willChange: 'transform' }}
+              style={{ display: 'inline-flex', transformOrigin: '50% 0%', cursor: 'pointer', willChange: 'transform', WebkitTapHighlightColor: 'transparent' }}
               onClick={() => {
                 if (easterEgg !== 'idle') return;
                 setEasterEgg('active');
