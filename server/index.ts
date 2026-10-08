@@ -98,6 +98,11 @@ async function handleRequest(req: Request): Promise<Response> {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
 
+  // GET /api/health — lightweight liveness check for Docker Compose.
+  if (req.method === 'GET' && pathname === '/api/health') {
+    return json({ status: 'ok' });
+  }
+
   // GET /api/price-suggestions
   if (req.method === 'GET' && pathname === '/api/price-suggestions') {
     try {

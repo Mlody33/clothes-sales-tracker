@@ -81,6 +81,22 @@ docker compose up -d --build
 
 App is at `http://localhost:3001`.
 
+The liveness endpoint `GET /api/health` returns HTTP 200 with `{"status":"ok"}`.
+It checks that the HTTP server responds; it does not validate the data file.
+Docker Compose checks it every 30 seconds using Bun, which is already in the image.
+
+```bash
+curl -f http://localhost:3001/api/health
+docker compose ps
+```
+
+After startup, `docker compose ps` should show the app as `healthy`.
+To wait for the healthcheck when starting the app, use:
+
+```bash
+docker compose up -d --build --wait
+```
+
 **Data on your local storage**
 
 The app’s data (e.g. `entries.json`) is stored in a **bind volume** so it lives on your machine:
