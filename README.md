@@ -46,6 +46,33 @@ For production, build the client (`npm run build` in `client`), serve the built 
 
 ## Docker
 
+### CI and GHCR
+
+The workflow in `.github/workflows/ci.yml` runs on pushes and pull requests to `master`.
+It installs frontend dependencies with Bun's frozen lockfile, runs ESLint and the
+TypeScript/frontend build, then builds the existing Dockerfile for `linux/arm64`.
+There are currently no unit tests configured in this project.
+
+On pushes to `master`, the image is published using `GITHUB_TOKEN` as:
+
+- `ghcr.io/mlody33/clothes-sales-tracker:latest`
+- `ghcr.io/mlody33/clothes-sales-tracker:sha-<commit SHA>`
+
+The separate `.github/workflows/release.yml` workflow runs when a Git tag is
+pushed. It performs the same checks and ARM64 build, then publishes `latest` and
+the exact Git tag name instead of the SHA tag, for example:
+`ghcr.io/mlody33/clothes-sales-tracker:v1.0.0`.
+Use Git tag names compatible with Docker tags (letters, digits, underscores,
+periods and hyphens; at most 128 characters; cannot start with a period or hyphen).
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Pull requests only validate and build the image. The workflow publishes to GHCR;
+it does not update a running server automatically.
+
 ### Run locally with Docker
 
 ```bash
